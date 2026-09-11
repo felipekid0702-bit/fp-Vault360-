@@ -35,8 +35,24 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-brand-50 px-4">
       <div className="w-full max-w-sm rounded-xl border border-brand-100 bg-white p-8 shadow-sm">
-        <div className="flex justify-center">
-          <Image src="/brand/fp-vault360-logo.svg" alt="FP Vault360°" width={160} height={60} priority />
+        <div className="flex items-center justify-center gap-4 border-b border-brand-100 pb-6">
+          <Image
+            src="/brand/fp-solucoes-altura.svg"
+            alt="FP Soluções"
+            width={118}
+            height={58}
+            priority
+            className="h-14 w-auto object-contain"
+          />
+          <span aria-hidden="true" className="h-10 w-px bg-brand-100" />
+          <Image
+            src="/brand/fp-vault360-logo.svg"
+            alt="FP Vault360°"
+            width={150}
+            height={58}
+            priority
+            className="h-14 w-auto object-contain"
+          />
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-4">

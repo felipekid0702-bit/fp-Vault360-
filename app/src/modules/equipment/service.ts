@@ -21,9 +21,10 @@ export async function listEquipment(filters?: { status?: EquipmentStatus; search
   const supabase = createServerSupabaseClient()
   let query = supabase
     .from('equipment')
-    .select('*, manufacturer:manufacturers(name), category:equipment_categories(name), client:clients(id, name), service:services(id, work_order, status)')
+    .select('*, manufacturer:manufacturers(name), category:equipment_categories(name), client:clients(id, name), service:services(id, work_order, status), inspections(id, result, verdict, performed_at)')
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
+    .order('performed_at', { referencedTable: 'inspections', ascending: false })
 
   if (filters?.status) query = query.eq('status', filters.status)
   if (filters?.ownerType) query = query.eq('owner_type', filters.ownerType)

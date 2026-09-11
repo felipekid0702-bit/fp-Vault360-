@@ -56,6 +56,7 @@ export default async function EquipmentPage({ searchParams }: { searchParams: { 
               <th className="px-4 py-3">Categoria</th>
               <th className="px-4 py-3">Fabricante</th>
               <th className="px-4 py-3">Validade</th>
+              <th className="px-4 py-3">Inspeção</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Ações</th>
             </tr>
@@ -68,6 +69,7 @@ export default async function EquipmentPage({ searchParams }: { searchParams: { 
                 <td className="px-4 py-3">{item.category?.name ?? '—'}</td>
                 <td className="px-4 py-3">{item.manufacturer?.name ?? '—'}</td>
                 <td className="px-4 py-3">{item.expiration_date ?? '—'}</td>
+                <td className="px-4 py-3">{item.inspections?.[0]?.result === 'rejected' || item.inspections?.[0]?.verdict === 'unfit' ? 'INAPTO' : item.inspections?.[0]?.result === 'approved_with_restriction' ? 'AV' : item.inspections?.[0] ? 'APTO' : 'Não inspecionado'}</td>
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-2 py-1 text-xs font-medium ${STATUS_COLOR[item.status]}`}>
                     {STATUS_LABEL[item.status]}
@@ -87,7 +89,7 @@ export default async function EquipmentPage({ searchParams }: { searchParams: { 
             ))}
             {!equipment?.length && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-brand-700/60">
+                <td colSpan={8} className="px-4 py-8 text-center text-brand-700/60">
                   Nenhum equipamento cadastrado ainda.
                 </td>
               </tr>

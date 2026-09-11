@@ -11,7 +11,7 @@ export function InspectionSelector({ equipment, templates }: { equipment: Equipm
   const [equipmentId, setEquipmentId] = useState('')
   const [templateId, setTemplateId] = useState('')
   const selectedEquipment = equipment.find((item) => item.id === equipmentId)
-  const availableTemplates = templates.filter((template) => !template.category_id || template.category_id === selectedEquipment?.category_id)
+  const availableTemplates = templates
 
   return (
     <div className="mt-6 max-w-3xl rounded-lg border border-brand-100 bg-white p-5">
@@ -32,7 +32,7 @@ export function InspectionSelector({ equipment, templates }: { equipment: Equipm
         </label>
       </div>
       {!equipment.length && <p className="mt-4 text-sm text-amber-700">Cadastre um equipamento antes de iniciar uma inspeção.</p>}
-      {equipmentId && !availableTemplates.length && <p className="mt-4 text-sm text-amber-700">Não há ficha ativa compatível com a categoria deste equipamento.</p>}
+      {equipmentId && !availableTemplates.length && <p className="mt-4 text-sm text-amber-700">Não há fichas FP cadastradas. Cadastre um template FP01–FP12 antes de iniciar.</p>}
       <button type="button" disabled={!equipmentId || !templateId} onClick={() => router.push(`/inspecoes/nova?equipmentId=${equipmentId}&templateId=${templateId}`)} className="mt-5 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">Abrir ficha de inspeção</button>
     </div>
   )

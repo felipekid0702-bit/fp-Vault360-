@@ -26,6 +26,7 @@ export default async function NewInspectionPage({
       <div className="mt-6">
         <ChecklistForm
           equipmentId={searchParams.equipmentId}
+          equipment={await getEquipmentForInspection(searchParams.equipmentId)}
           templateId={template.id}
           templateName={`${template.template_code ?? 'FP'} - ${template.name.replace(/^FP\d+\s*-\s*/, '')}`}
           inspectionType={template.inspection_type}
@@ -35,4 +36,21 @@ export default async function NewInspectionPage({
       </div>
     </div>
   )
+}
+
+async function getEquipmentForInspection(equipmentId: string) {
+  const { createServerSupabaseClient } = await import('@/shared/lib/supabase/server')
+  const supabase = createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from('equipment')
+    .select('id, model, serial_number, internal_code, category:equipment_categories(name), manufacturer:manufacturers(name), client:clients(name)')
+    .eq('id', equipmentId)
+    .single()
+  if (error) throw error
+  return {
+    ...data,
+    category: Array.isArray(data.category) ? data.category[0] : data.category,
+    manufacturer: Array.isArray(data.manufacturer) ? data.manufacturer[0] : data.manufacturer,
+    client: Array.isArray(data.client) ? data.client[0] : data.client,
+  }
 }

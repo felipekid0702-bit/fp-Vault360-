@@ -15,6 +15,14 @@ interface ChecklistItemUI {
 
 interface Props {
   equipmentId: string
+  equipment: {
+    model: string
+    serial_number?: string | null
+    internal_code?: string | null
+    category?: { name?: string } | null
+    manufacturer?: { name?: string } | null
+    client?: { name?: string } | null
+  }
   templateId: string
   templateName: string
   inspectionType: InspectionType
@@ -22,7 +30,7 @@ interface Props {
   items: ChecklistItemUI[]
 }
 
-export function ChecklistForm({ equipmentId, templateId, templateName, inspectionType, objective, items }: Props) {
+export function ChecklistForm({ equipmentId, equipment, templateId, templateName, inspectionType, objective, items }: Props) {
   const router = useRouter()
   const [results, setResults] = useState<Record<string, ChecklistItemStatus>>({})
   const [observations, setObservations] = useState<Record<string, string>>({})
@@ -99,6 +107,12 @@ export function ChecklistForm({ equipmentId, templateId, templateName, inspectio
     <div className="max-w-2xl">
       <h2 className="text-lg font-medium">{templateName}</h2>
       {objective && <p className="mt-1 text-sm text-brand-900/70">{objective}</p>}
+      <div className="mt-4 rounded-lg border border-brand-100 bg-brand-50 p-4 text-sm">
+        <p className="font-medium">Equipamento selecionado</p>
+        <p className="mt-1">{equipment.category?.name ?? 'Sem categoria'} · {equipment.model}{equipment.manufacturer?.name ? ` · ${equipment.manufacturer.name}` : ''}</p>
+        <p className="text-brand-900/70">Nº Série / Lote: {equipment.serial_number ?? '—'} · Código: {equipment.internal_code ?? '—'}</p>
+        <p className="text-brand-900/70">Proprietário: {equipment.client?.name ?? 'FP Soluções'}</p>
+      </div>
 
       <div className="mt-4 grid gap-3 rounded-lg border border-brand-100 bg-brand-50 p-4 md:grid-cols-2">
         <label className="text-sm font-medium">Local da inspeção
@@ -132,8 +146,8 @@ export function ChecklistForm({ equipmentId, templateId, templateName, inspectio
         <label className="text-sm font-medium">Próximo controle
           <input required type="date" value={nextDueDate} onChange={(event) => setNextDueDate(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 bg-white px-3 py-2 font-normal" />
         </label>
-        <label className="text-sm font-medium md:col-span-2">Evidências (um caminho de foto por linha)
-          <textarea required={hasRejection || hasHistoryTrigger} value={evidencePaths} onChange={(event) => setEvidencePaths(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 bg-white px-3 py-2 font-normal" rows={2} placeholder="storage/inspections/foto-001.jpg" />
+        <label className="text-sm font-medium md:col-span-2">Registro fotográfico (opcional)
+          <textarea required={hasRejection || hasHistoryTrigger} value={evidencePaths} onChange={(event) => setEvidencePaths(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 bg-white px-3 py-2 font-normal" rows={2} placeholder="Um caminho de foto por linha (opcional)" />
         </label>
         <label className="text-sm font-medium md:col-span-2">Assinatura (caminho do arquivo)
           <input required value={signaturePath} onChange={(event) => setSignaturePath(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 bg-white px-3 py-2 font-normal" placeholder="storage/signatures/inspetor.png" />

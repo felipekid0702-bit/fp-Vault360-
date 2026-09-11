@@ -113,6 +113,15 @@ export async function createInspection(input: CreateInspectionInput) {
   const { error: itemsError } = await supabase.from('inspection_items_result').insert(itemsPayload)
   if (itemsError) throw itemsError
 
+  const hasRejectedItem = input.items.some((item) => item.classification === 'AR' || item.classification === 'R')
+  const equipmentStatus = hasRejectedItem || input.verdict === 'unfit' ? 'quarantine' : 'active'
+  const { error: equipmentStatusError } = await supabase
+    .from('equipment')
+    .update({ status: equipmentStatus, updated_by: user.id })
+    .eq('id', input.equipment_id)
+    .eq('tenant_id', tenantId)
+  if (equipmentStatusError) throw equipmentStatusError
+
   if (input.evidence_paths?.length) {
     const { error: evidenceError } = await supabase.from('inspection_evidences').insert(
       input.evidence_paths.map((storage_path) => ({ inspection_id: inspection.id, storage_path })),
@@ -140,7 +149,13 @@ export async function createInspection(input: CreateInspectionInput) {
     p_metadata: { type: input.type, equipment_id: input.equipment_id },
   })
 
-  return inspection as Inspection
+  const { data: savedInspection, error: savedInspectionError } = await supabase
+    .from('inspections')
+    .select('*')
+    .eq('id', inspection.id)
+    .single()
+  if (savedInspectionError) throw savedInspectionError
+  return savedInspection as Inspection
 }
 
 export async function uploadInspectionEvidence(inspectionId: string, storagePath: string, caption?: string) {

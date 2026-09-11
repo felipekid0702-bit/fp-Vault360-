@@ -17,8 +17,9 @@ export async function requirePermission(supabase: SupabaseClient, permission: st
     .eq('user_id', user.id)
   if (error) throw error
 
-  const roleCodes = (assignments ?? []).flatMap((assignment: { roles?: Array<{ code?: string; role_permissions?: Array<{ permissions?: Array<{ code?: string }> }> }> }) => {
-    return (assignment.roles ?? []).flatMap((role) => [
+  const roleCodes = (assignments ?? []).flatMap((assignment: { roles?: { code?: string; role_permissions?: Array<{ permissions?: Array<{ code?: string }> }> } | Array<{ code?: string; role_permissions?: Array<{ permissions?: Array<{ code?: string }> }> }> }) => {
+    const roles = Array.isArray(assignment.roles) ? assignment.roles : assignment.roles ? [assignment.roles] : []
+    return roles.flatMap((role) => [
       role.code,
       ...((role.role_permissions ?? []).flatMap((item) => (item.permissions ?? []).map((permission) => permission.code))),
     ])

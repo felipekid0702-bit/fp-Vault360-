@@ -51,6 +51,7 @@ export function ImportWizard() {
   }
 
   return <div className="mt-6 max-w-xl space-y-4 rounded-lg border border-brand-100 bg-white p-5">
+    <a href="/api/importacao/modelo" className="inline-block text-sm font-medium text-brand-700 underline">Baixar planilha modelo</a>
     <input type="file" accept=".xlsx,.xls,.csv" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
     <div className="flex gap-2">
       <button type="button" disabled={!file || busy} onClick={inspect} className="rounded-md bg-brand-700 px-4 py-2 text-sm text-white disabled:opacity-50">Validar arquivo</button>

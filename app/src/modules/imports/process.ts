@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/shared/lib/supabase/server'
+import { createServerSupabaseClient, createServiceRoleClient } from '@/shared/lib/supabase/server'
 import { parseSpreadsheet } from './preview'
 
 const EQUIPMENT_STATUSES = new Set(['active', 'quarantine', 'blocked', 'retired', 'lost'])
@@ -30,7 +30,7 @@ export async function processImportJob(jobId: string) {
   const errors: Array<{ import_job_id: string; row_number: number; field?: string; message: string }> = []
 
   try {
-    const { data: file, error: fileError } = await supabase.storage.from('documents').download(job.file_path)
+    const { data: file, error: fileError } = await createServiceRoleClient().storage.from('documents').download(job.file_path)
     if (fileError || !file) throw new Error(fileError?.message ?? 'Arquivo de importação não encontrado no Storage')
 
     const parsed = parseSpreadsheet(await file.arrayBuffer())
@@ -49,6 +49,10 @@ export async function processImportJob(jobId: string) {
 
     const { data: profile } = await supabase.from('users').select('tenant_id').eq('id', auth.user.id).single()
     if (!profile?.tenant_id) throw new Error('Usuário não possui tenant para importar equipamentos')
+    const { data: categories } = await supabase.from('equipment_categories').select('id, name').eq('tenant_id', profile.tenant_id).is('deleted_at', null)
+    const categoryIds = new Map((categories ?? []).map((category) => [category.name.toLocaleLowerCase('pt-BR'), category.id]))
+    const { data: manufacturers } = await supabase.from('manufacturers').select('id, name').eq('tenant_id', profile.tenant_id).is('deleted_at', null)
+    const manufacturerIds = new Map((manufacturers ?? []).map((manufacturer) => [manufacturer.name.toLocaleLowerCase('pt-BR'), manufacturer.id]))
 
     for (let index = 0; index < validRows.length; index += 1) {
       const row = validRows[index]
@@ -58,8 +62,8 @@ export async function processImportJob(jobId: string) {
         model: asText(row.model) as string,
         serial_number: asText(row.serial_number),
         internal_code: asText(row.internal_code),
-        manufacturer_id: UUID_PATTERN.test(asText(row.manufacturer_id) ?? '') ? row.manufacturer_id : undefined,
-        category_id: UUID_PATTERN.test(asText(row.category_id) ?? '') ? row.category_id : undefined,
+        manufacturer_id: UUID_PATTERN.test(asText(row.manufacturer_id) ?? '') ? row.manufacturer_id : manufacturerIds.get(asText(row.manufacturer)?.toLocaleLowerCase('pt-BR') ?? ''),
+        category_id: UUID_PATTERN.test(asText(row.category_id) ?? '') ? row.category_id : categoryIds.get(asText(row.category_name)?.toLocaleLowerCase('pt-BR') ?? ''),
         manufacture_date: asDate(row.manufacture_date),
         acquisition_date: asDate(row.acquisition_date),
         first_use_date: asDate(row.first_use_date),

@@ -51,9 +51,6 @@ export async function POST(request: NextRequest) {
   if (parsed.data.owner_type === 'client' && !parsed.data.client_id) {
     return NextResponse.json({ error: 'Cliente é obrigatório para equipamento de cliente.' }, { status: 422 })
   }
-  if (parsed.data.owner_type === 'client' && !parsed.data.service_id) {
-    return NextResponse.json({ error: 'Serviço é obrigatório para equipamento de cliente.' }, { status: 422 })
-  }
   if (parsed.data.owner_type === 'fp' && parsed.data.client_id) {
     return NextResponse.json({ error: 'Equipamento FP não pode ter cliente proprietário.' }, { status: 422 })
   }

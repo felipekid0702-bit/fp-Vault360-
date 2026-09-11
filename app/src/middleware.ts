@@ -27,8 +27,9 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
   const isPasswordRoute = request.nextUrl.pathname.startsWith('/trocar-senha')
   const isBootstrapRoute = request.nextUrl.pathname === '/api/admin/bootstrap'
+  const isImportTemplateRoute = request.nextUrl.pathname === '/api/importacao/modelo'
   const isBrandAsset = request.nextUrl.pathname.startsWith('/brand/')
-  const isPublicRoute = isAuthRoute || isPasswordRoute || isBootstrapRoute || isBrandAsset || request.nextUrl.pathname.startsWith('/api/public')
+  const isPublicRoute = isAuthRoute || isPasswordRoute || isBootstrapRoute || isImportTemplateRoute || isBrandAsset || request.nextUrl.pathname.startsWith('/api/public')
 
   if (!user && !isPublicRoute) {
     return NextResponse.redirect(new URL('/login', request.url))

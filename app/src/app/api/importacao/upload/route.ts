@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/shared/lib/supabase/server'
+import { createServerSupabaseClient, createServiceRoleClient } from '@/shared/lib/supabase/server'
 
 export const runtime = 'nodejs'
 
@@ -19,7 +19,13 @@ export async function POST(request: NextRequest) {
 
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
     const path = `${profile.tenant_id}/imports/${crypto.randomUUID()}-${safeName}`
-    const { error } = await supabase.storage.from('documents').upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type || 'application/octet-stream', upsert: false })
+    const storage = createServiceRoleClient().storage
+    const { data: bucket } = await storage.getBucket('documents')
+    if (!bucket) {
+      const { error: bucketError } = await storage.createBucket('documents', { public: false })
+      if (bucketError && !bucketError.message.toLowerCase().includes('already exists')) return NextResponse.json({ error: bucketError.message }, { status: 400 })
+    }
+    const { error } = await storage.from('documents').upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type || 'application/octet-stream', upsert: false })
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
     return NextResponse.json({ data: { path, name: file.name } }, { status: 201 })
   } catch (error: any) {

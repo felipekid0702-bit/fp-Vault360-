@@ -99,9 +99,26 @@ export async function softDeleteClient(id: string) {
 
 export async function listCategories() {
   const supabase = createServerSupabaseClient()
+  const { tenantId, user } = await getAuthenticatedTenant(supabase)
   const { data, error } = await supabase.from('equipment_categories').select('id, name, code, default_lifespan_months').is('deleted_at', null).order('name')
   if (error) throw error
-  return data
+  const defaults = [
+    ['Ascensor', 'ASCENSOR'], ['Cinta Sling - Elemento Textil', 'CINTA-SLING'], ['Cinto', 'CINTO'],
+    ['Corda', 'CORDA'], ['Descensor', 'DESCENSOR'], ['Estribo - Elemento Textil', 'ESTRIBO'],
+    ['Estropo', 'ESTROPO'], ['Extensor - Elemento Textil', 'EXTENSOR'], ['Fita Anel - Elemento Textil', 'FITA-ANEL'],
+    ['Mailon - Conector', 'MAILON'], ['Mosquetão - Conector', 'MOSQUETAO'], ['Polia', 'POLIA'],
+    ['Proteção de Corda - Elemento Textil', 'PROTECAO-CORDA'], ['Talabarte', 'TALABARTE'], ['Trava Quedas', 'TRAVA-QUEDAS'],
+  ]
+  const existingNames = new Set((data ?? []).map((category) => category.name.toLocaleLowerCase('pt-BR')))
+  const missing = defaults.filter(([name]) => !existingNames.has(name.toLocaleLowerCase('pt-BR')))
+  if (missing.length) {
+    const { data: inserted, error: insertError } = await supabase.from('equipment_categories').insert(
+      missing.map(([name, code]) => ({ tenant_id: tenantId, name, code, default_lifespan_months: 60, created_by: user.id, updated_by: user.id })),
+    ).select('id, name, code, default_lifespan_months')
+    if (insertError) throw insertError
+    return [...(data ?? []), ...(inserted ?? [])].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+  }
+  return data ?? []
 }
 
 export async function createCategory(input: { name: string; code?: string; default_lifespan_months?: number }) {

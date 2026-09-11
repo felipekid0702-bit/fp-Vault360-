@@ -54,7 +54,6 @@ begin
   return v_tenant_id;
 end;
 $$;
-
 -- ----------------------------------------------------------------------------
 -- 2) TRANSFERÊNCIA DE TITULARIDADE DO SUPER MASTER
 -- ----------------------------------------------------------------------------
@@ -84,7 +83,6 @@ begin
           jsonb_build_object('previous_super_master', v_current_id, 'new_super_master', p_new_user_id));
 end;
 $$;
-
 -- ----------------------------------------------------------------------------
 -- 3) VERSIONAMENTO AUTOMÁTICO (alterna sufixos .2 / .3)
 -- ----------------------------------------------------------------------------
@@ -118,7 +116,6 @@ begin
   return v_new;
 end;
 $$;
-
 -- ----------------------------------------------------------------------------
 -- 4) EDIÇÃO DE EMPRESA/PRODUTO (somente Super Master, sem exposição na UI padrão)
 -- ----------------------------------------------------------------------------
@@ -143,7 +140,6 @@ begin
           jsonb_build_object('company_name', p_company_name, 'product_name', p_product_name));
 end;
 $$;
-
 -- ----------------------------------------------------------------------------
 -- 5) LOG HELPER (chamado pelas Edge Functions / API para toda mutação relevante)
 -- ----------------------------------------------------------------------------

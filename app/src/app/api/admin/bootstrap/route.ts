@@ -11,6 +11,26 @@ export async function POST(request: NextRequest) {
   if (!email || !password) return NextResponse.json({ error: 'MASTER_EMAIL e MASTER_PASSWORD são obrigatórios' }, { status: 500 })
 
   const supabase = createServiceRoleClient()
+  const masterTenantName = process.env.MASTER_TENANT_NAME ?? 'FP Soluções em Altura'
+  const { data: masterTenant, error: masterTenantError } = await supabase
+    .from('tenants')
+    .select('id')
+    .eq('is_master', true)
+    .is('deleted_at', null)
+    .maybeSingle()
+
+  if (masterTenantError) return NextResponse.json({ error: masterTenantError.message }, { status: 400 })
+  if (!masterTenant) {
+    const { error } = await supabase.from('tenants').insert({
+      name: masterTenantName,
+      legal_name: masterTenantName,
+      is_master: true,
+      operation_mode: 'service_provider',
+      status: 'active',
+    })
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  }
+
   const { data: existing } = await supabase.from('users').select('id').eq('is_super_master', true).is('deleted_at', null).maybeSingle()
   if (existing) return NextResponse.json({ data: { created: false, user_id: existing.id } })
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabaseClient } from '@/shared/lib/supabase/server'
+import { requirePermission } from '@/shared/lib/supabase/authorization'
 
 const schema = z.object({
   equipment_id: z.string().uuid(),
@@ -34,16 +35,17 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   try {
     const supabase = createServerSupabaseClient()
-    const { data: auth } = await supabase.auth.getUser()
-    const { data: profile } = await supabase.from('users').select('tenant_id').eq('id', auth.user?.id ?? '').single()
-    if (!profile?.tenant_id) throw new Error('Usuário não possui tenant')
-    const { data, error } = await supabase.from('maintenance_records').insert({ ...parsed.data, tenant_id: profile.tenant_id, created_by: auth.user?.id }).select().single()
+    const { user, tenantId } = await requirePermission(supabase, 'equipment:update')
+    const { data: equipment } = await supabase.from('equipment').select('id').eq('id', parsed.data.equipment_id).eq('tenant_id', tenantId).single()
+    if (!equipment) throw new Error('Equipamento não encontrado no tenant atual.')
+    const { data, error } = await supabase.from('maintenance_records').insert({ ...parsed.data, tenant_id: tenantId, created_by: user.id, performed_by: user.id }).select().single()
     if (error) throw error
     if (parsed.data.maintenance_type === 'repair') {
       const { error: quarantineError } = await supabase
         .from('quarantine_cases')
         .update({ status: 'repair', analysis_notes: parsed.data.description })
         .eq('equipment_id', parsed.data.equipment_id)
+        .eq('tenant_id', tenantId)
         .in('status', ['quarantined', 'under_analysis'])
       if (quarantineError) throw quarantineError
     }

@@ -1,5 +1,6 @@
 import { listKits } from '@/modules/kits/service'
 import { KitForm } from '@/modules/kits/components/KitForm'
+import { listClients } from '@/modules/inventory/service'
 
 const STATUS_LABEL: Record<string, string> = {
   active: 'Ativo',
@@ -18,7 +19,7 @@ const STATUS_COLOR: Record<string, string> = {
 }
 
 export default async function KitsPage() {
-  const kits = await listKits()
+  const [kits, clients] = await Promise.all([listKits(), listClients()])
 
   const activeKits = kits.filter((kit: any) => kit.status === 'active').length
   const attentionKits = kits.filter((kit: any) => ['quarantine', 'blocked', 'lost'].includes(kit.status)).length
@@ -30,7 +31,7 @@ export default async function KitsPage() {
           <h1 className="text-xl font-semibold">Kits</h1>
           <p className="mt-1 text-sm text-brand-900/70">Conjuntos de equipamentos e seus componentes rastreáveis.</p>
         </div>
-        <KitForm />
+        <KitForm clients={clients} />
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -54,7 +55,7 @@ export default async function KitsPage() {
             <tr>
               <th className="px-4 py-3">Kit</th>
               <th className="px-4 py-3">Código</th>
-              <th className="px-4 py-3">Categoria</th>
+              <th className="px-4 py-3">Cliente</th>
               <th className="px-4 py-3">Componentes</th>
               <th className="px-4 py-3">Status</th>
             </tr>
@@ -64,7 +65,7 @@ export default async function KitsPage() {
               <tr key={kit.id}>
                 <td className="px-4 py-3 font-medium">{kit.name}</td>
                 <td className="px-4 py-3">{kit.code ?? '—'}</td>
-                <td className="px-4 py-3">{kit.category ?? '—'}</td>
+                <td className="px-4 py-3">{kit.client?.name ?? 'FP Soluções'}</td>
                 <td className="px-4 py-3">{kit.items?.length ?? 0}</td>
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-2 py-1 text-xs font-medium ${STATUS_COLOR[kit.status] ?? 'bg-gray-100 text-gray-600'}`}>

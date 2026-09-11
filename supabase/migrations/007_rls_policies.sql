@@ -10,12 +10,10 @@ create or replace function fn_current_user_tenant()
 returns uuid as $$
   select tenant_id from users where id = auth.uid() and deleted_at is null;
 $$ language sql stable security definer;
-
 create or replace function fn_is_super_master()
 returns boolean as $$
   select coalesce((select is_super_master from users where id = auth.uid() and deleted_at is null), false);
 $$ language sql stable security definer;
-
 create or replace function fn_has_permission(p_module text, p_action text)
 returns boolean as $$
   select exists (
@@ -28,7 +26,6 @@ returns boolean as $$
       and p.action = p_action
   ) or fn_is_super_master();
 $$ language sql stable security definer;
-
 -- Macro (aplicada tabela a tabela abaixo): política padrão de isolamento
 -- USING: is_super_master() OR tenant_id = fn_current_user_tenant()
 -- Para tenants em modo "service_provider"/"hybrid", o tenant master (FP)
@@ -55,7 +52,6 @@ begin
     execute format('alter table %I enable row level security;', t);
   end loop;
 end $$;
-
 -- ---- TENANTS ----
 create policy tenants_select on tenants for select
   using (fn_is_super_master() or id = fn_current_user_tenant()
@@ -67,7 +63,6 @@ create policy tenants_insert on tenants for insert
   with check (fn_is_super_master());
 create policy tenants_delete on tenants for delete
   using (fn_is_super_master());
-
 -- ---- USERS ----
 create policy users_select on users for select
   using (fn_is_super_master() or tenant_id = fn_current_user_tenant());
@@ -77,7 +72,6 @@ create policy users_modify on users for all
 -- Proteção extra: ninguém além do próprio Super Master altera/exclui o registro dele
 create policy users_protect_super_master on users for update
   using (not is_super_master or auth.uid() = id);
-
 -- ---- Tabelas padrão de tenant (isolamento simples) ----
 do $$
 declare
@@ -99,7 +93,6 @@ begin
     $f$, t);
   end loop;
 end $$;
-
 -- ---- TABELAS FILHAS SEM tenant_id ----
 create policy import_errors_isolation on import_errors for all
   using (
@@ -120,7 +113,6 @@ create policy import_errors_isolation on import_errors for all
         and ij.tenant_id = fn_current_user_tenant()
     )
   );
-
 create policy contract_scopes_isolation on contract_scopes for all
   using (
     fn_is_super_master()
@@ -140,7 +132,6 @@ create policy contract_scopes_isolation on contract_scopes for all
         and c.fp_tenant_id = fn_current_user_tenant()
     )
   );
-
 create policy document_versions_isolation on document_versions for all
   using (
     fn_is_super_master()
@@ -160,7 +151,6 @@ create policy document_versions_isolation on document_versions for all
         and d.tenant_id = fn_current_user_tenant()
     )
   );
-
 -- ---- CHECKLIST ITEMS (isolamento pelo template pai) ----
 create policy checklist_items_tenant_isolation on checklist_items for all
   using (
@@ -181,7 +171,6 @@ create policy checklist_items_tenant_isolation on checklist_items for all
         and ct.tenant_id = fn_current_user_tenant()
     )
   );
-
 -- ---- EQUIPMENT (inclui visibilidade da FP em modo prestador/híbrido) ----
 create policy equipment_select on equipment for select
   using (
@@ -195,7 +184,6 @@ create policy equipment_update on equipment for update using (
   fn_is_super_master() or tenant_id = fn_current_user_tenant());
 create policy equipment_delete on equipment for delete using (
   fn_is_super_master() or tenant_id = fn_current_user_tenant());
-
 -- ---- INSPECTIONS (mesma regra de visibilidade cruzada da FP) ----
 create policy inspections_select on inspections for select
   using (
@@ -207,7 +195,6 @@ create policy inspections_write on inspections for insert with check (
   fn_is_super_master() or tenant_id = fn_current_user_tenant());
 create policy inspections_update on inspections for update using (
   fn_is_super_master() or tenant_id = fn_current_user_tenant());
-
 -- ---- Tabelas filhas de inspection (join até tenant_id via inspection_id) ----
 create policy inspection_items_result_isolation on inspection_items_result for all
   using (fn_is_super_master() or exists (
@@ -218,12 +205,10 @@ create policy inspection_evidences_isolation on inspection_evidences for all
 create policy inspection_signatures_isolation on inspection_signatures for all
   using (fn_is_super_master() or exists (
     select 1 from inspections i where i.id = inspection_id and i.tenant_id = fn_current_user_tenant()));
-
 -- ---- KIT ITEMS (join via kits) ----
 create policy kit_items_isolation on kit_items for all
   using (fn_is_super_master() or exists (
     select 1 from kits k where k.id = kit_id and k.tenant_id = fn_current_user_tenant()));
-
 -- ---- EQUIPMENT CODES / PHOTOS / DOCUMENTS (join via equipment) ----
 create policy equipment_codes_isolation on equipment_codes for all
   using (fn_is_super_master() or tenant_id = fn_current_user_tenant());
@@ -231,19 +216,16 @@ create policy equipment_photos_isolation on equipment_photos for all
   using (fn_is_super_master() or tenant_id = fn_current_user_tenant());
 create policy documents_isolation on documents for all
   using (fn_is_super_master() or tenant_id = fn_current_user_tenant());
-
 -- ---- CONTRACTS (visível para FP e para o cliente vinculado) ----
 create policy contracts_select on contracts for select
   using (fn_is_super_master() or fp_tenant_id = fn_current_user_tenant() or client_tenant_id = fn_current_user_tenant());
 create policy contracts_write on contracts for all
   using (fn_is_super_master() or fp_tenant_id = fn_current_user_tenant())
   with check (fn_is_super_master() or fp_tenant_id = fn_current_user_tenant());
-
 -- ---- AUDIT LOG (leitura restrita: próprio tenant ou super master; INSERT sempre liberado via função) ----
 create policy audit_log_select on audit_log for select
   using (fn_is_super_master() or tenant_id = fn_current_user_tenant());
 create policy audit_log_insert on audit_log for insert with check (true);
-
 -- ---- ROLES / USER_ROLES ----
 create policy roles_select on roles for select
   using (tenant_id is null or fn_is_super_master() or tenant_id = fn_current_user_tenant());

@@ -14,7 +14,6 @@ create table checklist_templates (
   updated_at timestamptz not null default now(),
   created_by uuid, updated_by uuid
 );
-
 create table checklist_items (
   id uuid primary key default uuid_generate_v4(),
   template_id uuid not null references checklist_templates(id) on delete cascade,
@@ -24,11 +23,9 @@ create table checklist_items (
   is_critical boolean not null default false, -- reprovação automática se marcado NOK
   created_at timestamptz not null default now()
 );
-
 alter table equipment_categories
   add constraint fk_category_checklist foreign key (checklist_template_id)
   references checklist_templates(id);
-
 create table inspections (
   id uuid primary key default uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
@@ -49,7 +46,6 @@ create table inspections (
 create index idx_inspections_tenant on inspections(tenant_id) where deleted_at is null;
 create index idx_inspections_equipment on inspections(equipment_id);
 create index idx_inspections_due on inspections(tenant_id, next_due_date);
-
 create table inspection_items_result (
   id uuid primary key default uuid_generate_v4(),
   inspection_id uuid not null references inspections(id) on delete cascade,
@@ -57,7 +53,6 @@ create table inspection_items_result (
   status text not null check (status in ('ok','nok','na')),
   observation text
 );
-
 create table inspection_evidences (
   id uuid primary key default uuid_generate_v4(),
   inspection_id uuid not null references inspections(id) on delete cascade,
@@ -65,7 +60,6 @@ create table inspection_evidences (
   caption text,
   created_at timestamptz not null default now()
 );
-
 create table inspection_signatures (
   id uuid primary key default uuid_generate_v4(),
   inspection_id uuid not null references inspections(id) on delete cascade,
@@ -73,10 +67,8 @@ create table inspection_signatures (
   signature_image_path text,
   signed_at timestamptz not null default now()
 );
-
 create trigger trg_inspections_updated_at before update on inspections
   for each row execute function fn_set_updated_at();
-
 -- Regra: item crítico marcado 'nok' força resultado 'rejected' na inspeção
 create or replace function fn_apply_inspection_result()
 returns trigger as $$
@@ -95,6 +87,5 @@ begin
   return new;
 end;
 $$ language plpgsql;
-
 create trigger trg_inspection_item_result after insert or update on inspection_items_result
   for each row execute function fn_apply_inspection_result();

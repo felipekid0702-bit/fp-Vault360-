@@ -1,7 +1,7 @@
--- FP VAULT360 - MIGRATION 012: CICLO OPERACIONAL, RASTREABILIDADE E LAUDOS
+﻿-- FP VAULT360 - MIGRATION 012: CICLO OPERACIONAL, RASTREABILIDADE E LAUDOS
 
 create table if not exists equipment_movements (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default extensions.uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
   equipment_id uuid not null references equipment(id),
   movement_type text not null check (movement_type in ('stock','dispatch','unit_transfer','return','inspection_release','quarantine','maintenance','disposal')),
@@ -17,7 +17,7 @@ create table if not exists equipment_movements (
 );
 
 create table if not exists maintenance_records (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default extensions.uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
   equipment_id uuid not null references equipment(id),
   inspection_id uuid references inspections(id),
@@ -34,7 +34,7 @@ create table if not exists maintenance_records (
 );
 
 create table if not exists quarantine_cases (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default extensions.uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
   equipment_id uuid not null references equipment(id),
   inspection_id uuid references inspections(id),
@@ -49,7 +49,7 @@ create table if not exists quarantine_cases (
 );
 
 create table if not exists disposal_records (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default extensions.uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
   equipment_id uuid not null references equipment(id),
   quarantine_case_id uuid references quarantine_cases(id),
@@ -61,7 +61,7 @@ create table if not exists disposal_records (
 );
 
 create table if not exists inspection_reports (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default extensions.uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
   inspection_id uuid not null unique references inspections(id) on delete cascade,
   report_number text not null unique,
@@ -73,7 +73,7 @@ create table if not exists inspection_reports (
 );
 
 create table if not exists competency_catalog (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default extensions.uuid_generate_v4(),
   code text not null unique,
   name text not null,
   description text,
@@ -81,7 +81,7 @@ create table if not exists competency_catalog (
 );
 
 create table if not exists user_competencies (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default extensions.uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
   user_id uuid not null references users(id),
   competency_id uuid not null references competency_catalog(id),
@@ -117,10 +117,10 @@ alter table user_certifications
   add column if not exists document_path text;
 
 insert into competency_catalog (code, name, description) values
-  ('inspector_level_1','Inspetor Nível 1','Executa inspeções sob procedimento aprovado'),
-  ('competent_inspector','Inspetor Competente','Avalia equipamentos e decisões técnicas'),
+  ('inspector_level_1','Inspetor NÃ­vel 1','Executa inspeÃ§Ãµes sob procedimento aprovado'),
+  ('competent_inspector','Inspetor Competente','Avalia equipamentos e decisÃµes tÃ©cnicas'),
   ('supervisor','Supervisor','Revisa resultados e libera equipamentos'),
-  ('administrator','Administrador','Administra operação e documentos')
+  ('administrator','Administrador','Administra operaÃ§Ã£o e documentos')
 on conflict (code) do nothing;
 
 create or replace function fn_open_quarantine_after_inspection()
@@ -130,7 +130,7 @@ begin
     update equipment set status = 'quarantine' where id = new.equipment_id;
     insert into quarantine_cases (tenant_id, equipment_id, inspection_id, reason, opened_by)
     select new.tenant_id, new.equipment_id, new.id,
-      coalesce(new.notes, 'Inspeção FP resultou em INAPTO'),
+      coalesce(new.notes, 'InspeÃ§Ã£o FP resultou em INAPTO'),
       new.inspector_id
     where not exists (
       select 1 from quarantine_cases q
@@ -178,3 +178,4 @@ begin
     execute format('create policy %I on %I for all using (fn_is_super_master() or tenant_id = fn_current_user_tenant()) with check (fn_is_super_master() or tenant_id = fn_current_user_tenant())', table_name || '_tenant_isolation', table_name);
   end loop;
 end $$;
+

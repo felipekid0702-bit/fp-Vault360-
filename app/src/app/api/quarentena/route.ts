@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabaseClient } from '@/shared/lib/supabase/server'
+import { requirePermission } from '@/shared/lib/supabase/authorization'
 
 const schema = z.object({
   equipment_id: z.string().uuid(),
@@ -35,12 +36,12 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   try {
     const supabase = createServerSupabaseClient()
-    const { data: auth } = await supabase.auth.getUser()
-    const { data: profile } = await supabase.from('users').select('tenant_id').eq('id', auth.user?.id ?? '').single()
-    if (!profile?.tenant_id) throw new Error('Usuário não possui tenant')
-    const { data, error } = await supabase.from('quarantine_cases').insert({ ...parsed.data, tenant_id: profile.tenant_id, opened_by: auth.user?.id }).select().single()
+    const { user, tenantId } = await requirePermission(supabase, 'equipment:update')
+    const { data: equipment } = await supabase.from('equipment').select('id').eq('id', parsed.data.equipment_id).eq('tenant_id', tenantId).single()
+    if (!equipment) throw new Error('Equipamento não encontrado no tenant atual.')
+    const { data, error } = await supabase.from('quarantine_cases').insert({ ...parsed.data, tenant_id: tenantId, opened_by: user.id }).select().single()
     if (error) throw error
-    const { error: equipmentError } = await supabase.from('equipment').update({ status: 'quarantine' }).eq('id', parsed.data.equipment_id)
+    const { error: equipmentError } = await supabase.from('equipment').update({ status: 'quarantine' }).eq('id', parsed.data.equipment_id).eq('tenant_id', tenantId)
     if (equipmentError) throw equipmentError
     return NextResponse.json({ data }, { status: 201 })
   } catch (error: any) {
@@ -56,12 +57,12 @@ export async function PATCH(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   try {
     const supabase = createServerSupabaseClient()
-    const { data: auth } = await supabase.auth.getUser()
-    if (!auth.user) return NextResponse.json({ error: 'Usuário não autenticado.' }, { status: 401 })
+    const { user, tenantId } = await requirePermission(supabase, 'equipment:update')
     const { data: quarantineCase, error: caseError } = await supabase
       .from('quarantine_cases')
       .select('id, equipment_id')
       .eq('id', caseId)
+      .eq('tenant_id', tenantId)
       .single()
     if (caseError) throw caseError
     if (parsed.data.status === 'released') {
@@ -70,6 +71,7 @@ export async function PATCH(request: NextRequest) {
         .from('inspections')
         .select('id, equipment_id, result, verdict')
         .eq('id', parsed.data.reinspection_id)
+        .eq('tenant_id', tenantId)
         .single()
       if (reinspectionError) throw reinspectionError
       if (reinspection.equipment_id !== quarantineCase.equipment_id || reinspection.result !== 'approved' || reinspection.verdict !== 'fit') {
@@ -83,14 +85,15 @@ export async function PATCH(request: NextRequest) {
         analysis_notes: parsed.data.analysis_notes,
         decision: parsed.data.decision ?? null,
         closed_at: ['released', 'discarded'].includes(parsed.data.status) ? new Date().toISOString() : null,
-        closed_by: ['released', 'discarded'].includes(parsed.data.status) ? auth.user.id : null,
+        closed_by: ['released', 'discarded'].includes(parsed.data.status) ? user.id : null,
       })
       .eq('id', caseId)
+      .eq('tenant_id', tenantId)
       .select()
       .single()
     if (error) throw error
     const nextStatus = parsed.data.status === 'released' ? 'active' : parsed.data.status === 'discarded' ? 'retired' : 'quarantine'
-    const { error: equipmentError } = await supabase.from('equipment').update({ status: nextStatus }).eq('id', quarantineCase.equipment_id)
+    const { error: equipmentError } = await supabase.from('equipment').update({ status: nextStatus }).eq('id', quarantineCase.equipment_id).eq('tenant_id', tenantId)
     if (equipmentError) throw equipmentError
     return NextResponse.json({ data })
   } catch (error: any) {

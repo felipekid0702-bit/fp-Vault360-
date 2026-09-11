@@ -1,0 +1,7 @@
+import { listClients } from '@/modules/inventory/service'
+import { ClientForm } from '@/modules/inventory/components/ClientForm'
+
+export default async function ClientsPage() {
+  const clients = await listClients()
+  return <section><div className="flex items-center justify-between"><div><h1 className="text-xl font-semibold">Clientes</h1><p className="mt-1 text-sm text-brand-900/70">Proprietários externos dos equipamentos.</p></div><ClientForm /></div><div className="mt-6 overflow-hidden rounded-lg border border-brand-100 bg-white"><table className="w-full text-sm"><thead className="bg-brand-50 text-left text-xs uppercase text-brand-700/70"><tr><th className="px-4 py-3">Nome</th><th className="px-4 py-3">Razão Social</th><th className="px-4 py-3">CNPJ</th><th className="px-4 py-3">Contato</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Ações</th></tr></thead><tbody className="divide-y divide-brand-50">{clients.map((client: any) => <tr key={client.id}><td className="px-4 py-3 font-medium">{client.name}</td><td className="px-4 py-3">{client.legal_name ?? '—'}</td><td className="px-4 py-3">{client.cnpj ?? '—'}</td><td className="px-4 py-3">{client.primary_contact ?? client.email ?? '—'}</td><td className="px-4 py-3">{client.status === 'active' ? 'Ativo' : 'Inativo'}</td><td className="px-4 py-3"><ClientForm client={client} /></td></tr>)}{!clients.length && <tr><td colSpan={6} className="px-4 py-10 text-center text-brand-700/60">Nenhum cliente cadastrado.</td></tr>}</tbody></table></div></section>
+}

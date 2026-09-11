@@ -3,7 +3,6 @@
 -- ============================================================================
 create extension if not exists "uuid-ossp";
 create extension if not exists "pgcrypto";
-
 -- ----------------------------------------------------------------------------
 -- ENUMS
 -- ----------------------------------------------------------------------------
@@ -31,7 +30,6 @@ do $$ begin
   create type notification_channel as enum ('email', 'whatsapp', 'push');
 exception when duplicate_object then null;
 end $$;
-
 -- ----------------------------------------------------------------------------
 -- TENANTS
 -- ----------------------------------------------------------------------------
@@ -55,7 +53,6 @@ create table tenants (
 );
 create unique index uq_tenants_master on tenants (is_master) where is_master = true;
 create index idx_tenants_status on tenants(status) where deleted_at is null;
-
 -- ----------------------------------------------------------------------------
 -- PLATFORM SETTINGS (global, apenas Super Master edita)
 -- ----------------------------------------------------------------------------
@@ -71,7 +68,6 @@ create table platform_settings (
 );
 insert into platform_settings (company_name, product_name) values
   ('F P Soluções em Altura Ltda.', 'FP Vault360°');
-
 create table version_history (
   id uuid primary key default uuid_generate_v4(),
   version text not null,
@@ -80,7 +76,6 @@ create table version_history (
   source_system text, -- qual sistema associado disparou o bump
   notes text
 );
-
 -- ----------------------------------------------------------------------------
 -- USERS (espelha auth.users do Supabase Auth)
 -- ----------------------------------------------------------------------------
@@ -105,11 +100,9 @@ create table users (
 -- Apenas 1 Super Master ativo no sistema
 create unique index uq_users_super_master on users (is_super_master) where is_super_master = true and deleted_at is null;
 create index idx_users_tenant on users(tenant_id) where deleted_at is null;
-
 -- Consistência: Super Master nunca tem tenant_id
 alter table users add constraint chk_super_master_no_tenant
   check (not (is_super_master = true and tenant_id is not null));
-
 -- ----------------------------------------------------------------------------
 -- RBAC — ROLES, PERMISSIONS, GRANULAR ASSIGNMENT
 -- ----------------------------------------------------------------------------
@@ -123,20 +116,17 @@ create table roles (
   created_at timestamptz not null default now(),
   unique (tenant_id, code)
 );
-
 create table permissions (
   id uuid primary key default uuid_generate_v4(),
   module text not null, -- 'equipment','inspections','kits','training','audit','bi','imports','contracts','platform'
   action text not null, -- 'view','create','update','delete','approve','export'
   code text generated always as (module || ':' || action) stored unique
 );
-
 create table role_permissions (
   role_id uuid not null references roles(id) on delete cascade,
   permission_id uuid not null references permissions(id) on delete cascade,
   primary key (role_id, permission_id)
 );
-
 create table user_roles (
   user_id uuid not null references users(id) on delete cascade,
   role_id uuid not null references roles(id) on delete cascade,
@@ -145,7 +135,6 @@ create table user_roles (
   assigned_by uuid,
   primary key (user_id, role_id)
 );
-
 -- Seed dos papéis padrão (globais, replicados por tenant no provisionamento)
 insert into roles (tenant_id, code, name, level, is_system) values
   (null, 'super_master',    'Super Master',              0, true),
@@ -154,7 +143,6 @@ insert into roles (tenant_id, code, name, level, is_system) values
   (null, 'inspector',       'Inspetor',                  3, true),
   (null, 'warehouse',       'Almoxarife',                4, true),
   (null, 'operational',     'Usuário Operacional',       5, true);
-
 -- ----------------------------------------------------------------------------
 -- AUDIT LOG (imutável — sem UPDATE/DELETE)
 -- ----------------------------------------------------------------------------
@@ -171,19 +159,16 @@ create table audit_log (
 );
 create index idx_audit_log_tenant on audit_log(tenant_id, created_at desc);
 create index idx_audit_log_user on audit_log(user_id, created_at desc);
-
 create or replace function fn_audit_log_immutable()
 returns trigger as $$
 begin
   raise exception 'audit_log é imutável: UPDATE/DELETE não permitidos';
 end;
 $$ language plpgsql;
-
 create trigger trg_audit_log_no_update before update on audit_log
   for each row execute function fn_audit_log_immutable();
 create trigger trg_audit_log_no_delete before delete on audit_log
   for each row execute function fn_audit_log_immutable();
-
 -- ----------------------------------------------------------------------------
 -- updated_at automático (aplicado a todas as tabelas de negócio)
 -- ----------------------------------------------------------------------------
@@ -194,7 +179,6 @@ begin
   return new;
 end;
 $$ language plpgsql;
-
 create trigger trg_tenants_updated_at before update on tenants
   for each row execute function fn_set_updated_at();
 create trigger trg_users_updated_at before update on users

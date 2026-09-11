@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createManufacturer, listManufacturers } from '@/modules/inventory/service'
 
-const schema = z.object({ name: z.string().min(1), country: z.string().optional(), website: z.string().url().optional() })
+const schema = z.object({ name: z.string().trim().min(1), website: z.string().url().optional(), notes: z.string().optional(), status: z.enum(['active', 'inactive']).optional() })
 
-export async function GET() {
-  try { return NextResponse.json({ data: await listManufacturers() }) }
+export async function GET(request: NextRequest) {
+  try { return NextResponse.json({ data: await listManufacturers(new URL(request.url).searchParams.get('search') ?? undefined) }) }
   catch (error: any) { return NextResponse.json({ error: error.message }, { status: 400 }) }
 }
 

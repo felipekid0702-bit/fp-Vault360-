@@ -5,7 +5,8 @@ import { createKit, listKits } from '@/modules/kits/service'
 const schema = z.object({
   name: z.string().min(1),
   code: z.string().optional(),
-  category: z.string().optional(),
+  description: z.string().optional(),
+  client_id: z.string().uuid().optional(),
   parent_equipment_id: z.string().uuid().optional(),
   responsible_user_id: z.string().uuid().optional(),
   location_id: z.string().uuid().optional(),

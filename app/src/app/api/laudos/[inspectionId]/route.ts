@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import PDFDocument from 'pdfkit'
 import { createHash } from 'node:crypto'
 import { createServerSupabaseClient } from '@/shared/lib/supabase/server'
+import { requirePermission } from '@/shared/lib/supabase/authorization'
 
 function createPdf(data: any, reportNumber: string, images: Array<{ path: string; buffer: Buffer }>) {
   return new Promise<Buffer>((resolve, reject) => {
@@ -55,10 +56,12 @@ function createPdf(data: any, reportNumber: string, images: Array<{ path: string
 export async function GET(_request: Request, { params }: { params: { inspectionId: string } }) {
   try {
     const supabase = createServerSupabaseClient()
+    const { user, tenantId } = await requirePermission(supabase, 'inspections:approve')
     const { data, error } = await supabase
       .from('inspections')
       .select('*, equipment(model, serial_number, internal_code, manufacturer_id, invoice_number, acquisition_date, first_use_date), checklist_templates(template_code, name, objective), inspector:users!inspections_inspector_id_fkey(full_name), items:inspection_items_result(status, classification, observation, action_required, checklist_items(label, section)), evidences:inspection_evidences(storage_path, caption), signatures:inspection_signatures(signature_image_path, signed_at)')
       .eq('id', params.inspectionId)
+      .eq('tenant_id', tenantId)
       .single()
     if (error) throw error
     const reportNumber = `FP-${String(data.id).slice(0, 8).toUpperCase()}`
@@ -66,7 +69,7 @@ export async function GET(_request: Request, { params }: { params: { inspectionI
       tenant_id: data.tenant_id,
       inspection_id: data.id,
       report_number: reportNumber,
-      generated_by: (await supabase.auth.getUser()).data.user?.id,
+      generated_by: user.id,
     }, { onConflict: 'inspection_id' })
     if (reportError) throw reportError
     const images: Array<{ path: string; buffer: Buffer }> = []

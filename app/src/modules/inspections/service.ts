@@ -1,4 +1,5 @@
 import { createServerSupabaseClient } from '@/shared/lib/supabase/server'
+import { getAuthenticatedTenant } from '@/shared/lib/supabase/tenant'
 import type { CreateInspectionInput, Inspection } from './types'
 
 export async function listInspections(filters?: { equipmentId?: string; result?: string }) {
@@ -43,12 +44,24 @@ export async function listTemplatesForCategory(categoryId: string) {
 export async function listInspectionTargets() {
   const supabase = createServerSupabaseClient()
   const [equipmentResult, templatesResult] = await Promise.all([
-    supabase.from('equipment').select('id, model, serial_number, category_id').is('deleted_at', null).order('model'),
+    supabase.from('equipment').select('id, model, serial_number, category_id, owner_type, client:clients(id, name), manufacturer:manufacturers(name), category:equipment_categories(name)').is('deleted_at', null).order('model'),
     supabase.from('checklist_templates')    .select('id, template_code, name, inspection_type, category_id').eq('active', true).order('name'),
   ])
-  if (equipmentResult.error) throw equipmentResult.error
+  let equipment = equipmentResult.data
+  if (equipmentResult.error?.code === 'PGRST200' || equipmentResult.error?.code === 'PGRST205') {
+    console.error('[FP Vault360] Migration 014 ainda não aplicada; listando alvos de inspeção legados.', equipmentResult.error)
+    const legacyResult = await supabase
+      .from('equipment')
+      .select('id, model, serial_number, category_id, manufacturer:manufacturers(name), category:equipment_categories(name)')
+      .is('deleted_at', null)
+      .order('model')
+    if (legacyResult.error) throw legacyResult.error
+    equipment = legacyResult.data?.map((item) => ({ ...item, owner_type: 'fp', client: [] })) ?? []
+  } else if (equipmentResult.error) {
+    throw equipmentResult.error
+  }
   if (templatesResult.error) throw templatesResult.error
-  return { equipment: equipmentResult.data ?? [], templates: templatesResult.data ?? [] }
+  return { equipment: equipment ?? [], templates: templatesResult.data ?? [] }
 }
 
 /**
@@ -59,16 +72,17 @@ export async function listInspectionTargets() {
  */
 export async function createInspection(input: CreateInspectionInput) {
   const supabase = createServerSupabaseClient()
-  const { data: auth } = await supabase.auth.getUser()
+  const { user, tenantId } = await getAuthenticatedTenant(supabase)
 
   const { data: inspection, error: inspError } = await supabase
     .from('inspections')
     .insert({
+      tenant_id: tenantId,
       equipment_id: input.equipment_id,
       kit_id: input.kit_id ?? null,
       template_id: input.template_id,
       type: input.type,
-      inspector_id: auth.user?.id,
+      inspector_id: user.id,
       notes: input.notes,
       history_notes: input.history_notes,
       inspection_location: input.inspection_location,
@@ -79,8 +93,8 @@ export async function createInspection(input: CreateInspectionInput) {
       verdict: input.verdict,
       next_due_date: input.next_due_date,
       result: input.overall_result ?? 'approved', // trigger sobrescreve para 'rejected' se houver item crítico NOK
-      created_by: auth.user?.id,
-      updated_by: auth.user?.id,
+      created_by: user.id,
+      updated_by: user.id,
     })
     .select()
     .single()
@@ -108,7 +122,7 @@ export async function createInspection(input: CreateInspectionInput) {
   if (input.signature_image_path) {
     const { error: signatureError } = await supabase.from('inspection_signatures').insert({
       inspection_id: inspection.id,
-      signer_user_id: auth.user?.id,
+      signer_user_id: user.id,
       signature_image_path: input.signature_image_path,
     })
     if (signatureError) throw signatureError
@@ -139,9 +153,9 @@ export async function uploadInspectionEvidence(inspectionId: string, storagePath
 
 export async function signInspection(inspectionId: string, signatureImagePath: string) {
   const supabase = createServerSupabaseClient()
-  const { data: auth } = await supabase.auth.getUser()
+  const { user } = await getAuthenticatedTenant(supabase)
   const { error } = await supabase
     .from('inspection_signatures')
-    .insert({ inspection_id: inspectionId, signer_user_id: auth.user?.id, signature_image_path: signatureImagePath })
+    .insert({ inspection_id: inspectionId, signer_user_id: user.id, signature_image_path: signatureImagePath })
   if (error) throw error
 }

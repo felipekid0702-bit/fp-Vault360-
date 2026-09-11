@@ -14,7 +14,6 @@ create table import_layouts (
   created_at timestamptz not null default now(),
   created_by uuid
 );
-
 create table import_jobs (
   id uuid primary key default uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
@@ -30,7 +29,6 @@ create table import_jobs (
   created_by uuid,
   created_at timestamptz not null default now()
 );
-
 create table import_errors (
   id uuid primary key default uuid_generate_v4(),
   import_job_id uuid not null references import_jobs(id) on delete cascade,
@@ -38,7 +36,6 @@ create table import_errors (
   field text,
   message text not null
 );
-
 -- ----------------------------------------------------------------------------
 -- CONTRATOS (Modo Prestador de Serviço / Híbrido)
 -- ----------------------------------------------------------------------------
@@ -58,17 +55,14 @@ create table contracts (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
-
 create table contract_scopes (
   id uuid primary key default uuid_generate_v4(),
   contract_id uuid not null references contracts(id) on delete cascade,
   description text not null,
   category_id uuid references equipment_categories(id)
 );
-
 create trigger trg_contracts_updated_at before update on contracts
   for each row execute function fn_set_updated_at();
-
 -- ----------------------------------------------------------------------------
 -- NOTIFICAÇÕES
 -- ----------------------------------------------------------------------------
@@ -80,7 +74,6 @@ create table notification_rules (
   days_before int default 0,
   active boolean not null default true
 );
-
 create table notifications (
   id uuid primary key default uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
@@ -93,7 +86,6 @@ create table notifications (
   created_at timestamptz not null default now()
 );
 create index idx_notifications_user on notifications(user_id, read_at);
-
 -- ----------------------------------------------------------------------------
 -- BI — VIEWS E FUNÇÕES (dashboards nunca calculam agregados no frontend)
 -- ----------------------------------------------------------------------------
@@ -108,7 +100,6 @@ select
   count(*) filter (where expiration_date between current_date and current_date + interval '30 days') as total_expiring_soon
 from equipment
 group by tenant_id;
-
 create or replace view v_compliance_rate as
 select
   i.tenant_id,
@@ -122,7 +113,6 @@ select
 from inspections i
 where i.deleted_at is null
 group by i.tenant_id;
-
 create or replace view v_training_status as
 select
   tenant_id,
@@ -131,7 +121,6 @@ select
   count(*) filter (where status = 'expired') as expired_count
 from user_certifications
 group by tenant_id;
-
 create or replace view v_fp_operations_summary as
 -- Dashboard exclusivo da FP (modo Prestador de Serviço)
 select

@@ -1,0 +1,38 @@
+-- These tenant_id columns are checked on almost every RLS-protected query, so an
+-- unindexed FK here is the highest-impact fix among the 66 flagged by the linter.
+CREATE INDEX IF NOT EXISTS idx_action_plans_tenant ON public.action_plans(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_audits_tenant ON public.audits(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_certifications_tenant ON public.certifications(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_checklist_templates_tenant ON public.checklist_templates(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_contracts_fp_tenant ON public.contracts(fp_tenant_id);
+CREATE INDEX IF NOT EXISTS idx_contracts_client_tenant ON public.contracts(client_tenant_id);
+CREATE INDEX IF NOT EXISTS idx_cost_centers_tenant ON public.cost_centers(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_documents_tenant ON public.documents(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_equipment_category ON public.equipment(category_id);
+CREATE INDEX IF NOT EXISTS idx_equipment_cost_center ON public.equipment(cost_center_id);
+CREATE INDEX IF NOT EXISTS idx_equipment_location ON public.equipment(location_id);
+CREATE INDEX IF NOT EXISTS idx_equipment_manufacturer ON public.equipment(manufacturer_id);
+CREATE INDEX IF NOT EXISTS idx_equipment_categories_tenant ON public.equipment_categories(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_import_jobs_tenant ON public.import_jobs(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_import_layouts_tenant ON public.import_layouts(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_kits_tenant ON public.kits(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_locations_tenant ON public.locations(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_manufacturers_tenant ON public.manufacturers(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_nonconformities_tenant ON public.nonconformities(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_nonconformities_equipment ON public.nonconformities(equipment_id);
+CREATE INDEX IF NOT EXISTS idx_nonconformities_audit ON public.nonconformities(audit_id);
+CREATE INDEX IF NOT EXISTS idx_notification_rules_tenant ON public.notification_rules(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_tenant ON public.notifications(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_rope_cuts_tenant ON public.rope_cuts(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_rope_cuts_equipment ON public.rope_cuts(equipment_id);
+CREATE INDEX IF NOT EXISTS idx_rope_details_tenant ON public.rope_details(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_rope_usage_history_tenant ON public.rope_usage_history(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_rope_usage_history_equipment ON public.rope_usage_history(equipment_id);
+CREATE INDEX IF NOT EXISTS idx_trainings_tenant ON public.trainings(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_user_certifications_tenant ON public.user_certifications(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_user_certifications_user ON public.user_certifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_roles_tenant ON public.user_roles(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_user_roles_role ON public.user_roles(role_id);
+CREATE INDEX IF NOT EXISTS idx_checklist_items_template ON public.checklist_items(template_id);
+CREATE INDEX IF NOT EXISTS idx_inspections_equipment_id2 ON public.inspections(equipment_id) WHERE deleted_at IS NULL;
+;

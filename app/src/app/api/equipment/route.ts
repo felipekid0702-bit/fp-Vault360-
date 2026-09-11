@@ -6,6 +6,9 @@ const equipmentInputSchema = z.object({
   model: z.string().min(1, 'Modelo é obrigatório'),
   category_id: z.string().uuid().optional(),
   manufacturer_id: z.string().uuid().optional(),
+  owner_type: z.enum(['fp', 'client']).default('fp'),
+  client_id: z.string().uuid().optional(),
+  service_id: z.string().uuid().optional(),
   cost_center_id: z.string().uuid().optional(),
   location_id: z.string().uuid().optional(),
   internal_code: z.string().optional(),
@@ -26,6 +29,10 @@ export async function GET(request: NextRequest) {
     const data = await listEquipment({
       status: (searchParams.get('status') as any) ?? undefined,
       search: searchParams.get('search') ?? undefined,
+      ownerType: (searchParams.get('owner_type') as 'fp' | 'client') ?? undefined,
+      clientId: searchParams.get('client_id') ?? undefined,
+      manufacturerId: searchParams.get('manufacturer_id') ?? undefined,
+      categoryId: searchParams.get('category_id') ?? undefined,
     })
     return NextResponse.json({ data })
   } catch (error: any) {
@@ -40,6 +47,15 @@ export async function POST(request: NextRequest) {
 
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+  }
+  if (parsed.data.owner_type === 'client' && !parsed.data.client_id) {
+    return NextResponse.json({ error: 'Cliente é obrigatório para equipamento de cliente.' }, { status: 422 })
+  }
+  if (parsed.data.owner_type === 'client' && !parsed.data.service_id) {
+    return NextResponse.json({ error: 'Serviço é obrigatório para equipamento de cliente.' }, { status: 422 })
+  }
+  if (parsed.data.owner_type === 'fp' && parsed.data.client_id) {
+    return NextResponse.json({ error: 'Equipamento FP não pode ter cliente proprietário.' }, { status: 422 })
   }
 
   try {

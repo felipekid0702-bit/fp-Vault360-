@@ -1,10 +1,14 @@
 export type EquipmentStatus = 'active' | 'quarantine' | 'blocked' | 'retired' | 'lost'
+export type EquipmentOwnerType = 'fp' | 'client'
 
 export interface Equipment {
   id: string
   tenant_id: string
   category_id: string | null
   manufacturer_id: string | null
+  owner_type: EquipmentOwnerType
+  client_id: string | null
+  service_id: string | null
   cost_center_id: string | null
   location_id: string | null
   internal_code: string | null
@@ -26,6 +30,9 @@ export interface Equipment {
 export interface EquipmentInput {
   category_id?: string
   manufacturer_id?: string
+  owner_type?: EquipmentOwnerType
+  client_id?: string
+  service_id?: string
   cost_center_id?: string
   location_id?: string
   internal_code?: string

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServerSupabaseClient } from '@/shared/lib/supabase/server'
+import { requirePermission } from '@/shared/lib/supabase/authorization'
 
 const schema = z.object({
   equipment_id: z.string().uuid(),
@@ -15,12 +16,12 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   try {
     const supabase = createServerSupabaseClient()
-    const { data: auth } = await supabase.auth.getUser()
-    const { data: profile } = await supabase.from('users').select('tenant_id').eq('id', auth.user?.id ?? '').single()
-    if (!profile?.tenant_id) throw new Error('Usuário não possui tenant')
-    const { data, error } = await supabase.from('disposal_records').insert({ ...parsed.data, tenant_id: profile.tenant_id, disposed_by: auth.user?.id }).select().single()
+    const { user, tenantId } = await requirePermission(supabase, 'equipment:delete')
+    const { data: equipment } = await supabase.from('equipment').select('id').eq('id', parsed.data.equipment_id).eq('tenant_id', tenantId).single()
+    if (!equipment) throw new Error('Equipamento não encontrado no tenant atual.')
+    const { data, error } = await supabase.from('disposal_records').insert({ ...parsed.data, tenant_id: tenantId, disposed_by: user.id }).select().single()
     if (error) throw error
-    const { error: equipmentError } = await supabase.from('equipment').update({ status: 'retired' }).eq('id', parsed.data.equipment_id)
+    const { error: equipmentError } = await supabase.from('equipment').update({ status: 'retired' }).eq('id', parsed.data.equipment_id).eq('tenant_id', tenantId)
     if (equipmentError) throw equipmentError
     return NextResponse.json({ data }, { status: 201 })
   } catch (error: any) {

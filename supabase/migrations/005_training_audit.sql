@@ -9,7 +9,6 @@ create table certifications (
   category text,
   validity_months int
 );
-
 create table trainings (
   id uuid primary key default uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
@@ -18,7 +17,6 @@ create table trainings (
   provider text,
   created_at timestamptz not null default now()
 );
-
 create table user_certifications (
   id uuid primary key default uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
@@ -32,7 +30,6 @@ create table user_certifications (
   created_at timestamptz not null default now()
 );
 create index idx_user_cert_expiry on user_certifications(tenant_id, expires_at);
-
 create or replace function fn_set_user_certification_status()
 returns trigger as $$
 begin
@@ -45,11 +42,9 @@ begin
   return new;
 end;
 $$ language plpgsql;
-
 create trigger trg_user_certification_status
   before insert or update of expires_at on user_certifications
   for each row execute function fn_set_user_certification_status();
-
 -- ----------------------------------------------------------------------------
 -- AUDITORIAS E PLANOS DE AÇÃO
 -- ----------------------------------------------------------------------------
@@ -66,7 +61,6 @@ create table audits (
   updated_at timestamptz not null default now(),
   created_by uuid, updated_by uuid
 );
-
 create table nonconformities (
   id uuid primary key default uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
@@ -79,7 +73,6 @@ create table nonconformities (
   resolved_at timestamptz,
   created_by uuid
 );
-
 create table action_plans (
   id uuid primary key default uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
@@ -91,6 +84,5 @@ create table action_plans (
   completed_at timestamptz,
   created_at timestamptz not null default now()
 );
-
 create trigger trg_audits_updated_at before update on audits
   for each row execute function fn_set_updated_at();

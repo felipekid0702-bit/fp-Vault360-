@@ -12,7 +12,6 @@ create table manufacturers (
   updated_at timestamptz not null default now(),
   created_by uuid, updated_by uuid, deleted_at timestamptz
 );
-
 create table equipment_categories (
   id uuid primary key default uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
@@ -25,7 +24,6 @@ create table equipment_categories (
   updated_at timestamptz not null default now(),
   created_by uuid, updated_by uuid, deleted_at timestamptz
 );
-
 create table cost_centers (
   id uuid primary key default uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
@@ -36,7 +34,6 @@ create table cost_centers (
   created_at timestamptz not null default now(),
   deleted_at timestamptz
 );
-
 create table locations (
   id uuid primary key default uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
@@ -45,7 +42,6 @@ create table locations (
   created_at timestamptz not null default now(),
   deleted_at timestamptz
 );
-
 create table equipment (
   id uuid primary key default uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
@@ -79,14 +75,12 @@ create table equipment (
   updated_at timestamptz not null default now(),
   created_by uuid, updated_by uuid, deleted_at timestamptz
 );
-
 create index idx_equipment_tenant on equipment(tenant_id) where deleted_at is null;
 create index idx_equipment_serial on equipment(tenant_id, serial_number);
 create index idx_equipment_status on equipment(tenant_id, status);
 create index idx_equipment_expiration on equipment(tenant_id, expiration_date);
 create unique index uq_equipment_serial_tenant on equipment(tenant_id, serial_number)
   where deleted_at is null and serial_number is not null;
-
 create table equipment_codes (
   id uuid primary key default uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
@@ -96,7 +90,6 @@ create table equipment_codes (
   created_at timestamptz not null default now()
 );
 create unique index uq_equipment_codes on equipment_codes(tenant_id, code_type, code_value);
-
 create table equipment_photos (
   id uuid primary key default uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
@@ -106,7 +99,6 @@ create table equipment_photos (
   uploaded_by uuid,
   created_at timestamptz not null default now()
 );
-
 create table documents (
   id uuid primary key default uuid_generate_v4(),
   tenant_id uuid not null references tenants(id),
@@ -120,7 +112,6 @@ create table documents (
   created_by uuid,
   deleted_at timestamptz
 );
-
 create table document_versions (
   id uuid primary key default uuid_generate_v4(),
   document_id uuid not null references documents(id) on delete cascade,
@@ -130,6 +121,5 @@ create table document_versions (
   uploaded_at timestamptz not null default now(),
   unique (document_id, version)
 );
-
 create trigger trg_equipment_updated_at before update on equipment
   for each row execute function fn_set_updated_at();

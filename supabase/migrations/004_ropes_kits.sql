@@ -16,7 +16,6 @@ create table rope_details (
   retired_at timestamptz,
   retired_reason text
 );
-
 create table rope_cuts (
   id uuid primary key default uuid_generate_v4(),
   equipment_id uuid not null references equipment(id) on delete cascade,
@@ -26,7 +25,6 @@ create table rope_cuts (
   performed_by uuid references users(id),
   performed_at timestamptz not null default now()
 );
-
 create table rope_usage_history (
   id uuid primary key default uuid_generate_v4(),
   equipment_id uuid not null references equipment(id) on delete cascade,
@@ -36,7 +34,6 @@ create table rope_usage_history (
   occurred_at timestamptz not null default now(),
   recorded_by uuid references users(id)
 );
-
 -- Atualiza current_length_m automaticamente ao registrar um corte
 create or replace function fn_apply_rope_cut()
 returns trigger as $$
@@ -52,10 +49,8 @@ begin
   return new;
 end;
 $$ language plpgsql;
-
 create trigger trg_rope_cut after insert on rope_cuts
   for each row execute function fn_apply_rope_cut();
-
 -- ----------------------------------------------------------------------------
 -- KITS
 -- ----------------------------------------------------------------------------
@@ -73,17 +68,14 @@ create table kits (
   updated_at timestamptz not null default now(),
   created_by uuid, updated_by uuid, deleted_at timestamptz
 );
-
 create table kit_items (
   kit_id uuid not null references kits(id) on delete cascade,
   equipment_id uuid not null references equipment(id) on delete cascade,
   added_at timestamptz not null default now(),
   primary key (kit_id, equipment_id)
 );
-
 alter table inspections
   add constraint fk_inspections_kit foreign key (kit_id) references kits(id);
-
 -- Status do kit = pior status entre os componentes
 create or replace function fn_recalc_kit_status(p_kit_id uuid)
 returns void as $$
@@ -105,7 +97,6 @@ begin
   update kits set status = coalesce(worst, 'active') where id = p_kit_id;
 end;
 $$ language plpgsql;
-
 create or replace function fn_trigger_kit_status()
 returns trigger as $$
 begin
@@ -113,9 +104,7 @@ begin
   return coalesce(new, old);
 end;
 $$ language plpgsql;
-
 create trigger trg_kit_items_status after insert or delete on kit_items
   for each row execute function fn_trigger_kit_status();
-
 create trigger trg_kits_updated_at before update on kits
   for each row execute function fn_set_updated_at();

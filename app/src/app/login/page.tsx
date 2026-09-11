@@ -26,7 +26,9 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard')
+    const profileResponse = await fetch('/api/auth/profile')
+    const profile = profileResponse.ok ? await profileResponse.json() : null
+    router.push(profile?.data?.must_change_password ? '/trocar-senha' : '/dashboard')
     router.refresh()
   }
 

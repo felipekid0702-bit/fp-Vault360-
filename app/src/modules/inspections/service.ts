@@ -40,6 +40,17 @@ export async function listTemplatesForCategory(categoryId: string) {
   return data
 }
 
+export async function listInspectionTargets() {
+  const supabase = createServerSupabaseClient()
+  const [equipmentResult, templatesResult] = await Promise.all([
+    supabase.from('equipment').select('id, model, serial_number, category_id').is('deleted_at', null).order('model'),
+    supabase.from('checklist_templates').select('id, name, inspection_type, category_id').eq('active', true).order('name'),
+  ])
+  if (equipmentResult.error) throw equipmentResult.error
+  if (templatesResult.error) throw templatesResult.error
+  return { equipment: equipmentResult.data ?? [], templates: templatesResult.data ?? [] }
+}
+
 /**
  * Cria a inspeção, grava o resultado item a item e, se necessário, define o
  * resultado geral. A reprovação automática por item crítico é aplicada pelo

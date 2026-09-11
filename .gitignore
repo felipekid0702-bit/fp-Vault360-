@@ -57,3 +57,5 @@ $RECYCLE.BIN/
 playwright-report/
 test-results/
 .nyc_output/
+.vercel
+.env*

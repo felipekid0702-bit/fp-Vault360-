@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import LogoutButton from './LogoutButton'
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -34,6 +35,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Link>
           ))}
         </nav>
+        <LogoutButton />
       </aside>
       <main className="flex-1 overflow-y-auto p-6">{children}</main>
     </div>

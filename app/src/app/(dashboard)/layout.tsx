@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: '/servicos', label: 'Serviços' },
   { href: '/relatorios', label: 'Relatórios' },
   { href: '/importacao', label: 'Importação' },
+  { href: '/configuracoes', label: 'Configurações' },
   { href: '/sobre', label: 'Sobre' },
 ]
 

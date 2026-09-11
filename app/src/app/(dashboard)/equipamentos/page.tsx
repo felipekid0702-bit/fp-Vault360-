@@ -2,6 +2,7 @@ import { listEquipment } from '@/modules/equipment/service'
 import { EquipmentForm } from '@/modules/equipment/components/EquipmentForm'
 import { listCategories, listManufacturers, listClients } from '@/modules/inventory/service'
 import { listServices } from '@/modules/services/service'
+import { listKits } from '@/modules/kits/service'
 
 const STATUS_LABEL: Record<string, string> = {
   active: 'Ativo',
@@ -20,19 +21,20 @@ const STATUS_COLOR: Record<string, string> = {
 }
 
 export default async function EquipmentPage({ searchParams }: { searchParams: { search?: string; owner_type?: 'fp' | 'client'; client_id?: string; manufacturer_id?: string; category_id?: string; status?: string } }) {
-  const [equipment, categories, manufacturers, clients, services] = await Promise.all([
+  const [equipment, categories, manufacturers, clients, services, kits] = await Promise.all([
     listEquipment({ search: searchParams.search, ownerType: searchParams.owner_type, clientId: searchParams.client_id, manufacturerId: searchParams.manufacturer_id, categoryId: searchParams.category_id, status: searchParams.status as any }),
     listCategories(),
     listManufacturers(),
     listClients(),
     listServices(),
+    listKits(),
   ])
 
   return (
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Equipamentos</h1>
-        <EquipmentForm categories={categories} manufacturers={manufacturers} clients={clients} services={services} />
+        <EquipmentForm categories={categories} manufacturers={manufacturers} clients={clients} services={services} kits={kits} />
       </div>
 
       <form className="mt-6 grid gap-3 rounded-lg border border-brand-100 bg-brand-50 p-4 md:grid-cols-6">
@@ -77,6 +79,7 @@ export default async function EquipmentPage({ searchParams }: { searchParams: { 
                     manufacturers={manufacturers}
                     clients={clients}
                     services={services}
+                    kits={kits}
                     equipment={item}
                   />
                 </td>

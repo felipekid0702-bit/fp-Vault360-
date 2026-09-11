@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { createKit, listKits } from '@/modules/kits/service'
+import { createKit, listKits, updateKit } from '@/modules/kits/service'
 
 const schema = z.object({
   name: z.string().min(1),
@@ -23,4 +23,14 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   try { return NextResponse.json({ data: await createKit(parsed.data) }, { status: 201 }) }
   catch (error: any) { return NextResponse.json({ error: error.message }, { status: 400 }) }
+}
+
+export async function PATCH(request: NextRequest) {
+  const body = await request.json()
+  const parsed = schema.extend({ id: z.string().uuid() }).safeParse(body)
+  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+  try {
+    const { id, ...input } = parsed.data
+    return NextResponse.json({ data: await updateKit(id, input) })
+  } catch (error: any) { return NextResponse.json({ error: error.message }, { status: 400 }) }
 }

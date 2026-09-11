@@ -1,6 +1,7 @@
 import { listKits } from '@/modules/kits/service'
 import { KitForm } from '@/modules/kits/components/KitForm'
 import { listClients } from '@/modules/inventory/service'
+import { listEquipment } from '@/modules/equipment/service'
 
 const STATUS_LABEL: Record<string, string> = {
   active: 'Ativo',
@@ -19,7 +20,7 @@ const STATUS_COLOR: Record<string, string> = {
 }
 
 export default async function KitsPage() {
-  const [kits, clients] = await Promise.all([listKits(), listClients()])
+  const [kits, clients, equipment] = await Promise.all([listKits(), listClients(), listEquipment()])
 
   const activeKits = kits.filter((kit: any) => kit.status === 'active').length
   const attentionKits = kits.filter((kit: any) => ['quarantine', 'blocked', 'lost'].includes(kit.status)).length
@@ -31,7 +32,7 @@ export default async function KitsPage() {
           <h1 className="text-xl font-semibold">Kits</h1>
           <p className="mt-1 text-sm text-brand-900/70">Conjuntos de equipamentos e seus componentes rastreáveis.</p>
         </div>
-        <KitForm clients={clients} />
+        <KitForm clients={clients} equipment={equipment} />
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -58,6 +59,7 @@ export default async function KitsPage() {
               <th className="px-4 py-3">Cliente</th>
               <th className="px-4 py-3">Componentes</th>
               <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-brand-50">
@@ -72,11 +74,12 @@ export default async function KitsPage() {
                     {STATUS_LABEL[kit.status] ?? kit.status}
                   </span>
                 </td>
+                <td className="px-4 py-3"><KitForm kit={kit} clients={clients} equipment={equipment} /></td>
               </tr>
             ))}
             {!kits.length && (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-brand-700/60">
+                <td colSpan={6} className="px-4 py-10 text-center text-brand-700/60">
                   Nenhum kit cadastrado ainda.
                 </td>
               </tr>

@@ -14,6 +14,7 @@ export function EquipmentForm({
   manufacturers = [],
   clients = [],
   services = [],
+  kits = [],
   equipment,
   onSaved,
 }: {
@@ -21,6 +22,7 @@ export function EquipmentForm({
   manufacturers?: CatalogOption[]
   clients?: CatalogOption[]
   services?: Array<{ id: string; name?: string; work_order?: string; client_id?: string }>
+  kits?: Array<{ id: string; name: string }>
   equipment?: Pick<Equipment, 'id' | 'model' | 'category_id' | 'manufacturer_id' | 'serial_number' | 'internal_code' | 'acquisition_date' | 'lifespan_months' | 'owner_type' | 'client_id' | 'service_id'>
   onSaved?: () => void
 }) {
@@ -32,6 +34,7 @@ export function EquipmentForm({
   const [ownerType, setOwnerType] = useState<'fp' | 'client'>(equipment?.owner_type ?? 'fp')
   const [clientId, setClientId] = useState(equipment?.client_id ?? '')
   const [serviceId, setServiceId] = useState(equipment?.service_id ?? '')
+  const [kitId, setKitId] = useState('')
   const [serialNumber, setSerialNumber] = useState(equipment?.serial_number ?? '')
   const [internalCode, setInternalCode] = useState(equipment?.internal_code ?? '')
   const [acquisitionDate, setAcquisitionDate] = useState(equipment?.acquisition_date ?? '')
@@ -64,9 +67,13 @@ export function EquipmentForm({
       })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error?.message ?? result.error ?? 'Não foi possível cadastrar o equipamento.')
+      if (kitId) {
+        const kitResponse = await fetch(`/api/kits/${kitId}/items`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ equipment_ids: [equipment?.id ?? result.data.id] }) })
+        if (!kitResponse.ok) throw new Error('Equipamento salvo, mas não foi possível vinculá-lo ao kit.')
+      }
       setSuccess(equipment ? 'Equipamento atualizado com sucesso.' : 'Equipamento cadastrado com sucesso.')
       if (!equipment) {
-        setModel(''); setCategoryId(''); setManufacturerId(''); setOwnerType('fp'); setClientId(''); setServiceId(''); setSerialNumber(''); setInternalCode(''); setAcquisitionDate(''); setLifespan('')
+        setModel(''); setCategoryId(''); setManufacturerId(''); setOwnerType('fp'); setClientId(''); setServiceId(''); setKitId(''); setSerialNumber(''); setInternalCode(''); setAcquisitionDate(''); setLifespan('')
         setOpen(false)
       }
       onSaved?.()
@@ -85,6 +92,7 @@ export function EquipmentForm({
       <label className="text-sm font-medium">Proprietário<select value={ownerType} onChange={(event) => { setOwnerType(event.target.value as 'fp' | 'client'); if (event.target.value === 'fp') setClientId('') }} className="mt-1 block w-full rounded-md border border-brand-100 px-3 py-2 font-normal"><option value="fp">FP Soluções</option><option value="client">Cliente</option></select></label>
       {ownerType === 'client' && <label className="text-sm font-medium">Cliente<select required value={clientId} onChange={(event) => setClientId(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 px-3 py-2 font-normal"><option value="">Selecione</option>{clients.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}</select></label>}
       {ownerType === 'client' && <label className="text-sm font-medium">Serviço <span className="font-normal text-brand-700/70">(pendente)</span><select value={serviceId} onChange={(event) => setServiceId(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 px-3 py-2 font-normal"><option value="">Ainda não vinculado</option>{services.filter((service) => !service.client_id || service.client_id === clientId).map((option) => <option key={option.id} value={option.id}>{option.name ?? option.work_order}</option>)}</select></label>}
+      <label className="text-sm font-medium">Kit (opcional)<select value={kitId} onChange={(event) => setKitId(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 px-3 py-2 font-normal"><option value="">Não vinculado</option>{kits.map((kit) => <option key={kit.id} value={kit.id}>{kit.name}</option>)}</select></label>
       <label className="text-sm font-medium">Nº Série / Lote<input value={serialNumber} onChange={(event) => setSerialNumber(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 px-3 py-2 font-normal" /></label>
       <label className="text-sm font-medium">Código interno<input value={internalCode} onChange={(event) => setInternalCode(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 px-3 py-2 font-normal" /></label>
       <label className="text-sm font-medium">Data de aquisição<input type="date" value={acquisitionDate} onChange={(event) => setAcquisitionDate(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 px-3 py-2 font-normal" /></label>

@@ -103,11 +103,11 @@ export async function listCategories() {
   const { data, error } = await supabase.from('equipment_categories').select('id, name, code, default_lifespan_months').is('deleted_at', null).order('name')
   if (error) throw error
   const defaults = [
-    ['Ascensor', 'ASCENSOR'], ['Cinta Sling - Elemento Textil', 'CINTA-SLING'], ['Cinto', 'CINTO'],
-    ['Corda', 'CORDA'], ['Descensor', 'DESCENSOR'], ['Estribo - Elemento Textil', 'ESTRIBO'],
-    ['Estropo', 'ESTROPO'], ['Extensor - Elemento Textil', 'EXTENSOR'], ['Fita Anel - Elemento Textil', 'FITA-ANEL'],
+    ['Ascensor', 'ASCENSOR'], ['Cinta Sling - ElementoTextil', 'CINTA-SLING'], ['Cinto', 'CINTO'],
+    ['Corda', 'CORDA'], ['Descensor', 'DESCENSOR'], ['Estribo - ElementoTextil', 'ESTRIBO'],
+    ['Estropo', 'ESTROPO'], ['Extensor - ElementoTextil', 'EXTENSOR'], ['Fita Anel - ElementoTextil', 'FITA-ANEL'],
     ['Mailon - Conector', 'MAILON'], ['Mosquetão - Conector', 'MOSQUETAO'], ['Polia', 'POLIA'],
-    ['Proteção de Corda - Elemento Textil', 'PROTECAO-CORDA'], ['Talabarte', 'TALABARTE'], ['Trava Quedas', 'TRAVA-QUEDAS'],
+    ['Proteção de Corda - ElementoTextil', 'PROTECAO-CORDA'], ['Talabarte', 'TALABARTE'], ['Trava Quedas', 'TRAVA-QUEDAS'],
   ]
   const existingNames = new Set((data ?? []).map((category) => category.name.toLocaleLowerCase('pt-BR')))
   const missing = defaults.filter(([name]) => !existingNames.has(name.toLocaleLowerCase('pt-BR')))

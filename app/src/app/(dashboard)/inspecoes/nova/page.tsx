@@ -27,6 +27,7 @@ export default async function NewInspectionPage({
           templateId={template.id}
           templateName={template.name}
           inspectionType={template.inspection_type}
+          objective={template.objective}
           items={template.items}
         />
       </div>

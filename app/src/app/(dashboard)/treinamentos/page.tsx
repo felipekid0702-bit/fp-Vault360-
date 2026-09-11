@@ -1,5 +1,7 @@
-import { listTrainingStatus } from '@/modules/training/service'
+import { listTrainingStatus, listCertifications, listTrainings, listTenantUsers } from '@/modules/training/service'
 import { TrainingForm } from '@/modules/training/components/TrainingForm'
+import { CertificationForm } from '@/modules/training/components/CertificationForm'
+import { IssueCertificationForm } from '@/modules/training/components/IssueCertificationForm'
 
 const STATUS_LABEL: Record<string, string> = {
   valid: 'Válida',
@@ -14,19 +16,28 @@ const STATUS_COLOR: Record<string, string> = {
 }
 
 export default async function TrainingsPage() {
-  const records = await listTrainingStatus()
+  const [records, certifications, trainings, users] = await Promise.all([
+    listTrainingStatus(),
+    listCertifications(),
+    listTrainings(),
+    listTenantUsers(),
+  ])
   const expired = records.filter((record: any) => record.status === 'expired').length
   const expiringSoon = records.filter((record: any) => record.status === 'expiring_soon').length
   const valid = records.filter((record: any) => record.status === 'valid').length
 
   return (
     <section>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold">Treinamentos</h1>
+          <h1 className="text-xl font-semibold">Treinamentos e Certificações</h1>
           <p className="mt-1 text-sm text-brand-900/70">Acompanhe certificações, validade e necessidades de reciclagem.</p>
         </div>
-        <TrainingForm />
+        <div className="flex flex-wrap gap-2">
+          <CertificationForm />
+          <TrainingForm certifications={certifications} />
+          <IssueCertificationForm certifications={certifications} trainings={trainings} users={users} />
+        </div>
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-4">
@@ -52,6 +63,7 @@ export default async function TrainingsPage() {
         <table className="w-full text-sm">
           <thead className="bg-brand-50 text-left text-xs uppercase text-brand-700/70">
             <tr>
+              <th className="px-4 py-3">Colaborador</th>
               <th className="px-4 py-3">Certificação</th>
               <th className="px-4 py-3">Treinamento</th>
               <th className="px-4 py-3">Emissão</th>
@@ -62,7 +74,8 @@ export default async function TrainingsPage() {
           <tbody className="divide-y divide-brand-50">
             {records.map((record: any) => (
               <tr key={record.id}>
-                <td className="px-4 py-3 font-medium">{record.certification?.name ?? '—'}</td>
+                <td className="px-4 py-3 font-medium">{record.user?.full_name ?? '—'}</td>
+                <td className="px-4 py-3">{record.certification?.name ?? '—'}</td>
                 <td className="px-4 py-3">{record.training?.name ?? '—'}</td>
                 <td className="px-4 py-3">{record.issued_at ?? '—'}</td>
                 <td className="px-4 py-3">{record.expires_at ?? 'Sem vencimento'}</td>
@@ -75,7 +88,7 @@ export default async function TrainingsPage() {
             ))}
             {!records.length && (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-brand-700/60">
+                <td colSpan={6} className="px-4 py-10 text-center text-brand-700/60">
                   Nenhuma certificação cadastrada ainda.
                 </td>
               </tr>

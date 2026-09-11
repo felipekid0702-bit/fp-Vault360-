@@ -1,0 +1,13 @@
+{
+  "name": "FP Vault360°",
+  "short_name": "FP Vault360",
+  "description": "Gestão e Inspeção Integrada de Equipamentos — F P Soluções em Altura",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#F0EDE4",
+  "theme_color": "#4F7A5C",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/brand/fp-vault360-logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

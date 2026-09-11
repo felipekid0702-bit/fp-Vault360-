@@ -1,6 +1,7 @@
 export type InspectionType = 'acquisition' | 'pre_use' | 'periodic' | 'extraordinary' | 'post_fall'
 export type InspectionResult = 'approved' | 'approved_with_restriction' | 'rejected'
 export type ChecklistItemStatus = 'ok' | 'nok' | 'na'
+export type InspectionClassification = 'C' | 'B' | 'AV' | 'AR' | 'R'
 
 export interface ChecklistTemplate {
   id: string
@@ -18,6 +19,9 @@ export interface ChecklistItem {
   description: string | null
   order_index: number
   is_critical: boolean
+  section?: string | null
+  required?: boolean
+  evidence_required?: boolean
 }
 
 export interface Inspection {
@@ -40,6 +44,8 @@ export interface InspectionItemResultInput {
   checklist_item_id: string
   status: ChecklistItemStatus
   observation?: string
+  classification: InspectionClassification
+  action_required?: string
 }
 
 export interface CreateInspectionInput {
@@ -51,4 +57,7 @@ export interface CreateInspectionInput {
   next_due_date?: string
   items: InspectionItemResultInput[]
   overall_result?: InspectionResult // usado quando não há item crítico reprovando automaticamente
+  history_notes?: string
+  inspection_location?: string
+  verdict?: 'fit' | 'unfit'
 }

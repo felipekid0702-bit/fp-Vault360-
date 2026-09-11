@@ -8,6 +8,9 @@ const inspectionInputSchema = z.object({
   template_id: z.string().uuid(),
   type: z.enum(['acquisition', 'pre_use', 'periodic', 'extraordinary', 'post_fall']),
   notes: z.string().optional(),
+  history_notes: z.string().optional(),
+  inspection_location: z.string().trim().min(1),
+  verdict: z.enum(['fit', 'unfit']),
   next_due_date: z.string().date().optional(),
   overall_result: z.enum(['approved', 'approved_with_restriction', 'rejected']).optional(),
   items: z
@@ -15,11 +18,24 @@ const inspectionInputSchema = z.object({
       z.object({
         checklist_item_id: z.string().uuid(),
         status: z.enum(['ok', 'nok', 'na']),
+        classification: z.enum(['C', 'B', 'AV', 'AR', 'R']),
         observation: z.string().optional(),
+        action_required: z.string().optional(),
       })
     )
     .min(1, 'Informe ao menos um item do checklist'),
 })
+
+function validateInspectionItems(items: z.infer<typeof inspectionInputSchema>['items'], verdict: 'fit' | 'unfit') {
+  const invalid = items.find((item) => ['AV', 'AR', 'R'].includes(item.classification) && !item.observation?.trim())
+  if (invalid) return 'Informe a observação para itens classificados como AV, AR ou R.'
+  const inconsistent = items.find((item) => ['AR', 'R'].includes(item.classification) && item.status !== 'nok')
+  if (inconsistent) return 'Itens AR ou R devem ser registrados como NOK.'
+  if (items.some((item) => ['AR', 'R'].includes(item.classification)) && verdict !== 'unfit') {
+    return 'Itens AR ou R exigem veredito INAPTO.'
+  }
+  return null
+}
 
 // GET /api/inspections?equipmentId=...&result=rejected
 export async function GET(request: NextRequest) {
@@ -43,6 +59,8 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
   }
+  const validationError = validateInspectionItems(parsed.data.items, parsed.data.verdict)
+  if (validationError) return NextResponse.json({ error: validationError }, { status: 422 })
 
   try {
     const data = await createInspection(parsed.data)

@@ -21,7 +21,7 @@ export async function getChecklistTemplate(templateId: string) {
   const supabase = createServerSupabaseClient()
   const { data, error } = await supabase
     .from('checklist_templates')
-    .select('*, items:checklist_items(id, label, description, order_index, is_critical)')
+    .select('*, items:checklist_items(id, label, description, order_index, is_critical, section, required, evidence_required)')
     .eq('id', templateId)
     .order('order_index', { referencedTable: 'checklist_items', ascending: true })
     .single()
@@ -70,6 +70,9 @@ export async function createInspection(input: CreateInspectionInput) {
       type: input.type,
       inspector_id: auth.user?.id,
       notes: input.notes,
+      history_notes: input.history_notes,
+      inspection_location: input.inspection_location,
+      verdict: input.verdict,
       next_due_date: input.next_due_date,
       result: input.overall_result ?? 'approved', // trigger sobrescreve para 'rejected' se houver item crítico NOK
       created_by: auth.user?.id,
@@ -83,7 +86,9 @@ export async function createInspection(input: CreateInspectionInput) {
   const itemsPayload = input.items.map((item) => ({
     inspection_id: inspection.id,
     checklist_item_id: item.checklist_item_id,
-    status: item.status,
+    status: item.classification === 'AR' || item.classification === 'R' ? 'nok' : item.status,
+    classification: item.classification,
+    action_required: item.action_required ?? null,
     observation: item.observation ?? null,
   }))
 

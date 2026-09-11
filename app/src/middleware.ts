@@ -27,7 +27,8 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
   const isPasswordRoute = request.nextUrl.pathname.startsWith('/trocar-senha')
   const isBootstrapRoute = request.nextUrl.pathname === '/api/admin/bootstrap'
-  const isPublicRoute = isAuthRoute || isPasswordRoute || isBootstrapRoute || request.nextUrl.pathname.startsWith('/api/public')
+  const isBrandAsset = request.nextUrl.pathname.startsWith('/brand/')
+  const isPublicRoute = isAuthRoute || isPasswordRoute || isBootstrapRoute || isBrandAsset || request.nextUrl.pathname.startsWith('/api/public')
 
   if (!user && !isPublicRoute) {
     return NextResponse.redirect(new URL('/login', request.url))
@@ -44,5 +45,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|manifest.json|icons).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|manifest.json|icons|brand).*)'],
 }

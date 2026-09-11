@@ -35,23 +35,23 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-brand-50 px-4">
       <div className="w-full max-w-sm rounded-xl border border-brand-100 bg-white p-8 shadow-sm">
-        <div className="flex items-center justify-center gap-4 border-b border-brand-100 pb-6">
-          <Image
-            src="/brand/fp-solucoes-altura.svg"
-            alt="FP Soluções"
-            width={118}
-            height={58}
-            priority
-            className="h-14 w-auto object-contain"
-          />
-          <span aria-hidden="true" className="h-10 w-px bg-brand-100" />
+        <div className="flex flex-col items-center justify-center gap-4 border-b border-brand-100 pb-6">
           <Image
             src="/brand/fp-vault360-logo.svg"
             alt="FP Vault360°"
-            width={150}
-            height={58}
+            width={300}
+            height={120}
             priority
-            className="h-14 w-auto object-contain"
+            className="h-auto w-[min(82vw,18rem)] object-contain"
+          />
+          <span aria-hidden="true" className="h-px w-32 bg-brand-100" />
+          <Image
+            src="/brand/fp-solucoes-altura.svg"
+            alt="FP Soluções"
+            width={280}
+            height={67}
+            priority
+            className="h-auto w-[min(76vw,16rem)] object-contain"
           />
         </div>
 

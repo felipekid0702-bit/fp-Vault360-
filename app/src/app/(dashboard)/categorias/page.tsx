@@ -1,0 +1,7 @@
+import { listCategories } from '@/modules/inventory/service'
+import { SimpleCatalogForm } from '@/modules/inventory/components/SimpleCatalogForm'
+
+export default async function CategoriesPage() {
+  const categories = await listCategories()
+  return <section><div className="flex items-center justify-between"><div><h1 className="text-xl font-semibold">Categorias</h1><p className="mt-1 text-sm text-brand-900/70">Categorias e vida útil padrão dos equipamentos.</p></div><SimpleCatalogForm endpoint="/api/categorias" title="categoria" hasLifespan /></div><div className="mt-6 overflow-hidden rounded-lg border border-brand-100 bg-white"><table className="w-full text-sm"><thead className="bg-brand-50 text-left text-xs uppercase text-brand-700/70"><tr><th className="px-4 py-3">Nome</th><th className="px-4 py-3">Código</th><th className="px-4 py-3">Vida útil</th></tr></thead><tbody className="divide-y divide-brand-50">{categories.map((item: any) => <tr key={item.id}><td className="px-4 py-3 font-medium">{item.name}</td><td className="px-4 py-3">{item.code ?? '—'}</td><td className="px-4 py-3">{item.default_lifespan_months ? `${item.default_lifespan_months} meses` : '—'}</td></tr>)}{!categories.length && <tr><td colSpan={3} className="px-4 py-10 text-center text-brand-700/60">Nenhuma categoria cadastrada.</td></tr>}</tbody></table></div></section>
+}

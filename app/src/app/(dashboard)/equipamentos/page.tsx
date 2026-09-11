@@ -1,4 +1,5 @@
 import { listEquipment } from '@/modules/equipment/service'
+import { EquipmentForm } from '@/modules/equipment/components/EquipmentForm'
 
 const STATUS_LABEL: Record<string, string> = {
   active: 'Ativo',
@@ -23,9 +24,7 @@ export default async function EquipmentPage() {
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">Equipamentos</h1>
-        <button className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-          + Novo Equipamento
-        </button>
+        <EquipmentForm />
       </div>
 
       <div className="mt-6 overflow-hidden rounded-lg border border-brand-100 bg-white">

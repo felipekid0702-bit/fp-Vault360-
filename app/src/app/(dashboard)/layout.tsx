@@ -4,6 +4,8 @@ import Image from 'next/image'
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/equipamentos', label: 'Equipamentos' },
+  { href: '/fabricantes', label: 'Fabricantes' },
+  { href: '/categorias', label: 'Categorias' },
   { href: '/inspecoes', label: 'Inspeções' },
   { href: '/kits', label: 'Kits' },
   { href: '/treinamentos', label: 'Treinamentos' },

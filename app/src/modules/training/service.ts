@@ -113,6 +113,8 @@ export async function issueUserCertification(input: UserCertificationInput) {
       training_id: input.training_id ?? null,
       issued_at: input.issued_at,
       expires_at: expiresAt,
+      issued_by: auth.user?.id,
+      document_path: input.notes ?? null,
     })
     .select('*, certification:certifications(name), training:trainings(name), user:users(full_name)')
     .single()

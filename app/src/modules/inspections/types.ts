@@ -8,6 +8,9 @@ export interface ChecklistTemplate {
   tenant_id: string | null
   category_id: string | null
   name: string
+  template_code?: string | null
+  objective?: string | null
+  source_document?: string | null
   inspection_type: InspectionType
   active: boolean
 }
@@ -55,9 +58,15 @@ export interface CreateInspectionInput {
   type: InspectionType
   notes?: string
   next_due_date?: string
+  evidence_paths?: string[]
+  signature_image_path?: string
   items: InspectionItemResultInput[]
   overall_result?: InspectionResult // usado quando não há item crítico reprovando automaticamente
   history_notes?: string
   inspection_location?: string
+  history_fall?: boolean
+  history_chemical_or_abrasive?: boolean
+  history_temperature_out_of_range?: boolean
+  history_unauthorized_modification?: boolean
   verdict?: 'fit' | 'unfit'
 }

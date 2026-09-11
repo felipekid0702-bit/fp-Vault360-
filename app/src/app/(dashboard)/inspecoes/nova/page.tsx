@@ -25,7 +25,7 @@ export default async function NewInspectionPage({
         <ChecklistForm
           equipmentId={searchParams.equipmentId}
           templateId={template.id}
-          templateName={template.name}
+          templateName={`${template.template_code ?? 'FP'} - ${template.name.replace(/^FP\d+\s*-\s*/, '')}`}
           inspectionType={template.inspection_type}
           objective={template.objective}
           items={template.items}

@@ -31,13 +31,24 @@ export function ChecklistForm({ equipmentId, templateId, templateName, inspectio
   const [notes, setNotes] = useState('')
   const [historyNotes, setHistoryNotes] = useState('')
   const [location, setLocation] = useState('')
+  const [history, setHistory] = useState({
+    fall: false,
+    chemicalOrAbrasive: false,
+    temperatureOutOfRange: false,
+    unauthorizedModification: false,
+  })
+  const [nextDueDate, setNextDueDate] = useState('')
+  const [evidencePaths, setEvidencePaths] = useState('')
+  const [signaturePath, setSignaturePath] = useState('')
   const [verdict, setVerdict] = useState<'fit' | 'unfit'>('fit')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const hasRejection = items.some((i) => ['AR', 'R'].includes(classifications[i.id]))
   const hasRestriction = items.some((i) => classifications[i.id] === 'AV')
+  const hasHistoryTrigger = Object.values(history).some(Boolean)
   const allAnswered = items.every((i) => results[i.id] && classifications[i.id])
+  const canSubmit = allAnswered && Boolean(location.trim()) && Boolean(nextDueDate) && (!hasHistoryTrigger && !hasRejection || verdict === 'unfit')
 
   async function handleSubmit() {
     setSubmitting(true)
@@ -50,6 +61,13 @@ export function ChecklistForm({ equipmentId, templateId, templateName, inspectio
       notes,
       history_notes: historyNotes,
       inspection_location: location,
+      history_fall: history.fall,
+      history_chemical_or_abrasive: history.chemicalOrAbrasive,
+      history_temperature_out_of_range: history.temperatureOutOfRange,
+      history_unauthorized_modification: history.unauthorizedModification,
+      next_due_date: nextDueDate,
+      evidence_paths: evidencePaths.split('\n').map((path) => path.trim()).filter(Boolean),
+      signature_image_path: signaturePath.trim() || undefined,
       verdict,
       items: items.map((i) => ({
         checklist_item_id: i.id,
@@ -94,6 +112,31 @@ export function ChecklistForm({ equipmentId, templateId, templateName, inspectio
         </label>
         <label className="text-sm font-medium md:col-span-2">Histórico informado pelo usuário
           <textarea value={historyNotes} onChange={(event) => setHistoryNotes(event.target.value)} placeholder="Queda, contato químico/abrasivo, temperatura extrema ou modificações externas" className="mt-1 block w-full rounded-md border border-brand-100 bg-white px-3 py-2 font-normal" rows={2} />
+        </label>
+        <fieldset className="md:col-span-2">
+          <legend className="text-sm font-medium">Gatilhos históricos FP (qualquer item exige avaliação e INAPTO)</legend>
+          <div className="mt-2 grid gap-2 text-xs md:grid-cols-2">
+            {([
+              ['fall', 'Queda de fator 1 ou maior'],
+              ['chemicalOrAbrasive', 'Contato químico ou abrasivo'],
+              ['temperatureOutOfRange', 'Temperatura abaixo de -40 °C ou acima de 80 °C'],
+              ['unauthorizedModification', 'Modificação de elemento de segurança'],
+            ] as const).map(([key, label]) => (
+              <label key={key} className="flex items-center gap-2">
+                <input type="checkbox" checked={history[key]} onChange={(event) => setHistory((current) => ({ ...current, [key]: event.target.checked }))} />
+                {label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <label className="text-sm font-medium">Próximo controle
+          <input required type="date" value={nextDueDate} onChange={(event) => setNextDueDate(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 bg-white px-3 py-2 font-normal" />
+        </label>
+        <label className="text-sm font-medium md:col-span-2">Evidências (um caminho de foto por linha)
+          <textarea required={hasRejection || hasHistoryTrigger} value={evidencePaths} onChange={(event) => setEvidencePaths(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 bg-white px-3 py-2 font-normal" rows={2} placeholder="storage/inspections/foto-001.jpg" />
+        </label>
+        <label className="text-sm font-medium md:col-span-2">Assinatura (caminho do arquivo)
+          <input required value={signaturePath} onChange={(event) => setSignaturePath(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 bg-white px-3 py-2 font-normal" placeholder="storage/signatures/inspetor.png" />
         </label>
       </div>
 
@@ -178,7 +221,7 @@ export function ChecklistForm({ equipmentId, templateId, templateName, inspectio
 
       <button
         onClick={handleSubmit}
-        disabled={!allAnswered || submitting}
+        disabled={!canSubmit || submitting}
         className="mt-4 w-full rounded-md bg-brand-600 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
       >
         {submitting ? 'Salvando...' : 'Concluir Inspeção'}

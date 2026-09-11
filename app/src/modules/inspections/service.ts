@@ -33,7 +33,7 @@ export async function listTemplatesForCategory(categoryId: string) {
   const supabase = createServerSupabaseClient()
   const { data, error } = await supabase
     .from('checklist_templates')
-    .select('id, name, inspection_type')
+    .select('id, template_code, name, inspection_type')
     .eq('category_id', categoryId)
     .eq('active', true)
   if (error) throw error
@@ -44,7 +44,7 @@ export async function listInspectionTargets() {
   const supabase = createServerSupabaseClient()
   const [equipmentResult, templatesResult] = await Promise.all([
     supabase.from('equipment').select('id, model, serial_number, category_id').is('deleted_at', null).order('model'),
-    supabase.from('checklist_templates').select('id, name, inspection_type, category_id').eq('active', true).order('name'),
+    supabase.from('checklist_templates')    .select('id, template_code, name, inspection_type, category_id').eq('active', true).order('name'),
   ])
   if (equipmentResult.error) throw equipmentResult.error
   if (templatesResult.error) throw templatesResult.error
@@ -72,6 +72,10 @@ export async function createInspection(input: CreateInspectionInput) {
       notes: input.notes,
       history_notes: input.history_notes,
       inspection_location: input.inspection_location,
+      history_fall: input.history_fall ?? false,
+      history_chemical_or_abrasive: input.history_chemical_or_abrasive ?? false,
+      history_temperature_out_of_range: input.history_temperature_out_of_range ?? false,
+      history_unauthorized_modification: input.history_unauthorized_modification ?? false,
       verdict: input.verdict,
       next_due_date: input.next_due_date,
       result: input.overall_result ?? 'approved', // trigger sobrescreve para 'rejected' se houver item crítico NOK
@@ -94,6 +98,21 @@ export async function createInspection(input: CreateInspectionInput) {
 
   const { error: itemsError } = await supabase.from('inspection_items_result').insert(itemsPayload)
   if (itemsError) throw itemsError
+
+  if (input.evidence_paths?.length) {
+    const { error: evidenceError } = await supabase.from('inspection_evidences').insert(
+      input.evidence_paths.map((storage_path) => ({ inspection_id: inspection.id, storage_path })),
+    )
+    if (evidenceError) throw evidenceError
+  }
+  if (input.signature_image_path) {
+    const { error: signatureError } = await supabase.from('inspection_signatures').insert({
+      inspection_id: inspection.id,
+      signer_user_id: auth.user?.id,
+      signature_image_path: input.signature_image_path,
+    })
+    if (signatureError) throw signatureError
+  }
 
   // Se a categoria do equipamento tinha status quarentena/bloqueado e a
   // inspeção foi aprovada, o gestor decide manualmente a reversão do status

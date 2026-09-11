@@ -1,0 +1,2 @@
+-- O usuário fundador é criado pela rota protegida /api/admin/bootstrap.
+-- Nunca coloque MASTER_PASSWORD ou qualquer segredo neste arquivo.

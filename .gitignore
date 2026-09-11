@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Next.js / React build output
+.next/
+**/.next/
+out/
+dist/
+build/
+coverage/
+.vercel/
+**/.vercel/
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+**/secrets/
+
+# Supabase local state
+supabase/.temp/
+**/supabase/.temp/
+
+# Logs, caches and temporary files
+logs/
+**/logs/
+*.log
+*.tmp
+*.temp
+*.bak
+*.cache
+.cache/
+**/.cache/
+*.tsbuildinfo
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.example.json
+
+# Test and tool artifacts
+playwright-report/
+test-results/
+.nyc_output/

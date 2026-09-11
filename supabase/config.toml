@@ -1,0 +1,16 @@
+project_id = "fpvault360"
+
+[api]
+enabled = true
+
+[db]
+port = 54322
+
+[auth]
+enabled = true
+
+[storage]
+enabled = true
+
+[analytics]
+enabled = false

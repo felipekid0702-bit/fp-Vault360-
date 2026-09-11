@@ -23,7 +23,7 @@ export async function requirePermission(supabase: SupabaseClient, permission: st
       ...((role.role_permissions ?? []).flatMap((item) => (item.permissions ?? []).map((permission) => permission.code))),
     ])
   })
-  if (roleCodes.includes('master01') || roleCodes.includes('master02') || roleCodes.includes('master03')) {
+  if (roleCodes.includes('master01') || roleCodes.includes('master02') || roleCodes.includes('master03') || roleCodes.includes('master04')) {
     return { user, tenantId }
   }
   if (roleCodes.includes(permission)) return { user, tenantId }

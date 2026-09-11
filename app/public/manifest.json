@@ -8,7 +8,6 @@
   "theme_color": "#4F7A5C",
   "orientation": "portrait-primary",
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/brand/fp-vault360-logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }

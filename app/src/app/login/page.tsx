@@ -35,23 +35,14 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-brand-50 px-4">
       <div className="w-full max-w-sm rounded-xl border border-brand-100 bg-white p-8 shadow-sm">
-        <div className="flex flex-col items-center justify-center gap-4 border-b border-brand-100 pb-6">
+        <div className="flex flex-col items-center justify-center gap-4">
           <Image
-            src="/brand/fp-vault360-logo.svg"
+            src="/brand/FP%20Vault360%20Final.png"
             alt="FP Vault360°"
             width={300}
             height={120}
             priority
             className="h-auto w-[min(82vw,18rem)] object-contain"
-          />
-          <span aria-hidden="true" className="h-px w-32 bg-brand-100" />
-          <Image
-            src="/brand/fp-solucoes-altura.svg"
-            alt="FP Soluções"
-            width={280}
-            height={67}
-            priority
-            className="h-auto w-[min(76vw,16rem)] object-contain"
           />
         </div>
 
@@ -87,6 +78,19 @@ export default function LoginPage() {
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </form>
+
+        <div className="mt-8 border-t border-brand-100 pt-6">
+          <div className="flex justify-center">
+            <Image
+              src="/brand/FP%20Solucoes.png"
+              alt="FP Soluções"
+              width={280}
+              height={67}
+              priority
+              className="h-auto w-[min(76vw,16rem)] object-contain"
+            />
+          </div>
+        </div>
       </div>
     </div>
   )

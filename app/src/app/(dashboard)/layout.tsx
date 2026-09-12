@@ -23,7 +23,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex min-h-screen">
       <aside className="w-60 shrink-0 border-r border-brand-100 bg-white px-4 py-6">
-        <Image src="/brand/fp-vault360-logo.svg" alt="FP Vault360°" width={140} height={50} className="h-auto" />
+        <Image src="/brand/FP%20Vault360%20Final.png" alt="FP Vault360°" width={140} height={50} className="h-auto" />
         <nav className="mt-8 space-y-1">
           {NAV_ITEMS.map((item) => (
             <Link

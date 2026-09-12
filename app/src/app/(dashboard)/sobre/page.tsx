@@ -1,10 +1,8 @@
 import Image from 'next/image'
-import { getPlatformIdentity, isCurrentUserSuperMaster } from '@/modules/platform/service'
-import Link from 'next/link'
+import { getPlatformIdentity } from '@/modules/platform/service'
 
 export default async function AboutPage() {
   const identity = await getPlatformIdentity()
-  const isSuperMaster = await isCurrentUserSuperMaster()
 
   const rows = [
     { label: 'Versão', value: identity.version },
@@ -17,7 +15,7 @@ export default async function AboutPage() {
 
   return (
     <div className="mx-auto max-w-xl py-12">
-      <Image src="/brand/fp-vault360-logo.svg" alt="FP Vault360°" width={220} height={80} />
+      <Image src="/brand/FP%20Vault360%20Final.png" alt="FP Vault360°" width={220} height={80} />
       <h1 className="mt-6 text-2xl font-semibold">{identity.product_name}</h1>
 
       <dl className="mt-6 divide-y divide-brand-100 rounded-lg border border-brand-100 bg-white">
@@ -29,16 +27,6 @@ export default async function AboutPage() {
         ))}
       </dl>
 
-      {/* Link de edição de identidade só existe para o Super Master,
-          e só neste ponto — não aparece em nenhum menu padrão. */}
-      {isSuperMaster && (
-        <Link
-          href="/sobre/identidade"
-          className="mt-4 inline-block text-xs text-brand-600 underline underline-offset-2"
-        >
-          Editar identidade da plataforma
-        </Link>
-      )}
     </div>
   )
 }

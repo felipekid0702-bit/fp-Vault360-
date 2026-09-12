@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'FP Vault360°',
   description: 'Gestão e Inspeção Integrada de Equipamentos — F P Soluções em Altura',
   manifest: '/manifest.json',
-  icons: { icon: '/brand/fp-vault360-logo.svg', apple: '/brand/fp-vault360-logo.svg' },
+  icons: { icon: '/brand/FP%20Vault360%20Final.png', apple: '/brand/FP%20Vault360%20Final.png' },
 }
 
 export const viewport = {

@@ -1,6 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { getAuthenticatedTenant } from './tenant'
 
+const FULL_DELETE_ROLE_CODES = new Set([
+  'super_master',
+  'sup_master',
+  'master01',
+  'master02',
+  'master03',
+  'master04',
+])
+
 export async function requirePermission(supabase: SupabaseClient, permission: string) {
   const { user, tenantId } = await getAuthenticatedTenant(supabase)
   const { data: profile, error: profileError } = await supabase
@@ -24,9 +33,16 @@ export async function requirePermission(supabase: SupabaseClient, permission: st
       ...((role.role_permissions ?? []).flatMap((item) => (item.permissions ?? []).map((permission) => permission.code))),
     ])
   })
-  if (roleCodes.includes('master01') || roleCodes.includes('master02') || roleCodes.includes('master03') || roleCodes.includes('master04')) {
+
+  const normalizedRoleCodes = new Set((roleCodes ?? []).filter(Boolean).map((code) => code.toLowerCase()))
+
+  const hasFullDeleteRole = [...normalizedRoleCodes].some((roleCode) => FULL_DELETE_ROLE_CODES.has(roleCode))
+  const isDeletePermission = permission.endsWith(':delete') || permission === 'delete'
+
+  if (hasFullDeleteRole && isDeletePermission) {
     return { user, tenantId }
   }
-  if (roleCodes.includes(permission)) return { user, tenantId }
+
+  if (normalizedRoleCodes.has(permission)) return { user, tenantId }
   throw new Error(`Permissão necessária: ${permission}`)
 }

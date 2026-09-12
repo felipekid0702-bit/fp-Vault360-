@@ -9,7 +9,7 @@ const createSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   access_type: z.enum(['fp', 'client']),
-  role_code: z.enum(['master01', 'master02', 'master03', 'master04', 'submaster', 'client_portal']),
+  role_code: z.enum(['super_master', 'sup_master', 'master01', 'master02', 'master03', 'master04', 'submaster', 'sub_master01', 'client_portal']),
   client_id: z.string().uuid().nullable().optional(),
 })
 

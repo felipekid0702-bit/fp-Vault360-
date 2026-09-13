@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from '@/shared/lib/supabase/server'
 import { getAuthenticatedTenant } from '@/shared/lib/supabase/tenant'
+import { requirePermission } from '@/shared/lib/supabase/authorization'
 import type { Equipment, EquipmentInput, EquipmentStatus } from './types'
 
 function isSchemaNotMigrated(error: { code?: string; message?: string }) {
@@ -160,10 +161,12 @@ export async function updateEquipment(id: string, input: Partial<EquipmentInput>
 
 export async function softDeleteEquipment(id: string) {
   const supabase = createServerSupabaseClient()
+  const { user, tenantId } = await requirePermission(supabase, 'equipment:delete')
   const { error } = await supabase
     .from('equipment')
-    .update({ deleted_at: new Date().toISOString() })
+    .update({ deleted_at: new Date().toISOString(), updated_by: user.id })
     .eq('id', id)
+    .eq('tenant_id', tenantId)
   if (error) throw error
   await supabase.rpc('log_audit', { p_action: 'equipment_deleted', p_entity: 'equipment', p_entity_id: id })
 }

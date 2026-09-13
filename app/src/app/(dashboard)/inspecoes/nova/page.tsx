@@ -14,7 +14,13 @@ export default async function NewInspectionPage({
   if (!searchParams.equipmentId || !searchParams.templateId) {
     const [targets, categories] = await Promise.all([listInspectionTargets(), listCategories()])
     return (
-      <section><h1 className="text-xl font-semibold">Nova Inspeção</h1><InspectionSelector equipment={targets.equipment as any} templates={targets.templates} />{targets.templates.map((template: any) => <div key={template.id} className="mt-3"><InlineEquipmentCreate templateId={template.id} categories={categories} /></div>)}</section>
+      <section>
+        <h1 className="text-xl font-semibold">Nova Inspeção</h1>
+        <InspectionSelector equipment={targets.equipment as any} templates={targets.templates} />
+        <div className="mt-4">
+          <InlineEquipmentCreate categories={categories} />
+        </div>
+      </section>
     )
   }
 

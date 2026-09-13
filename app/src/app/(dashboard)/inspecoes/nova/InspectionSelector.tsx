@@ -6,6 +6,10 @@ import { useRouter } from 'next/navigation'
 type Equipment = { id: string; model: string; serial_number?: string | null; category_id?: string | null; category?: { name?: string } | null }
 type Template = { id: string; template_code?: string | null; name: string; category_id?: string | null }
 
+function getTemplateLabel(template: Template) {
+  return template.name.replace(/^FP\d+\s*-\s*/i, '').trim() || template.name
+}
+
 export function InspectionSelector({ equipment, templates }: { equipment: Equipment[]; templates: Template[] }) {
   const router = useRouter()
   const [equipmentId, setEquipmentId] = useState('')
@@ -27,7 +31,7 @@ export function InspectionSelector({ equipment, templates }: { equipment: Equipm
         <label className="text-sm font-medium">Ficha / tipo de inspeção
           <select value={templateId} onChange={(event) => setTemplateId(event.target.value)} disabled={!equipmentId} className="mt-1 block w-full rounded-md border border-brand-100 px-3 py-2 font-normal disabled:bg-brand-50">
             <option value="">Selecione a ficha</option>
-            {availableTemplates.map((template) => <option key={template.id} value={template.id}>{template.template_code ? `${template.template_code} - ` : ''}{template.name}</option>)}
+            {availableTemplates.map((template) => <option key={template.id} value={template.id}>{getTemplateLabel(template)}</option>)}
           </select>
         </label>
       </div>

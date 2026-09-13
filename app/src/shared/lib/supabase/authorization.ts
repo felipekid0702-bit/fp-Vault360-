@@ -34,9 +34,11 @@ export async function requirePermission(supabase: SupabaseClient, permission: st
     ])
   })
 
-  const normalizedRoleCodes = new Set((roleCodes ?? []).filter(Boolean).map((code) => code.toLowerCase()))
+  const normalizedRoleCodes = new Set(
+    (roleCodes ?? []).filter((code): code is string => Boolean(code)).map((code) => code.toLowerCase()),
+  )
 
-  const hasFullDeleteRole = [...normalizedRoleCodes].some((roleCode) => FULL_DELETE_ROLE_CODES.has(roleCode))
+  const hasFullDeleteRole = Array.from(normalizedRoleCodes).some((roleCode) => FULL_DELETE_ROLE_CODES.has(roleCode))
   const isDeletePermission = permission.endsWith(':delete') || permission === 'delete'
 
   if (hasFullDeleteRole && isDeletePermission) {

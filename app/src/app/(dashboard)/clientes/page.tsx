@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { listClients } from '@/modules/inventory/service'
 import { ClientForm } from '@/modules/inventory/components/ClientForm'
 

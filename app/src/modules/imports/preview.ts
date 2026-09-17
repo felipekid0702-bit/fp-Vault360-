@@ -20,6 +20,15 @@ const DEFAULT_FIELDS: Record<string, string> = {
   observações: 'notes',
   observacoes: 'notes',
   notes: 'notes',
+  'nota fiscal': 'invoice_number',
+  'nota fiscal (nf)': 'invoice_number',
+  nf: 'invoice_number',
+  invoice_number: 'invoice_number',
+  'data da compra': 'acquisition_date',
+  'data de aquisição': 'acquisition_date',
+  'data da primeira utilização': 'first_use_date',
+  'data de primeira utilização': 'first_use_date',
+  first_use_date: 'first_use_date',
 }
 
 function normalize(value: string) {

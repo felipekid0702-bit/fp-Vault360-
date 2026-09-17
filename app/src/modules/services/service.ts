@@ -55,9 +55,19 @@ export async function updateService(id: string, input: Partial<Parameters<typeof
   return data
 }
 
-export async function softDeleteService(id: string) {
+export async function softDeleteService(id: string, reason?: string) {
   const supabase = createServerSupabaseClient()
   const { user, tenantId } = await requirePermission(supabase, 'services:delete')
   const { error } = await supabase.from('services').update({ deleted_at: new Date().toISOString(), updated_by: user.id }).eq('id', id).eq('tenant_id', tenantId)
   if (error) throw error
+  await supabase.rpc('log_audit', {
+    p_action: 'service_deleted',
+    p_entity: 'services',
+    p_entity_id: id,
+    p_metadata: {
+      reason: reason ?? 'Exclusão lógica solicitada pela operação',
+      deleted_by: user.id,
+      tenant_id: tenantId,
+    },
+  })
 }

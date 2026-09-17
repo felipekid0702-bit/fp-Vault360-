@@ -67,6 +67,7 @@ export async function processImportJob(jobId: string) {
         manufacture_date: asDate(row.manufacture_date),
         acquisition_date: asDate(row.acquisition_date),
         first_use_date: asDate(row.first_use_date),
+        invoice_number: asText(row.invoice_number),
         status: status && EQUIPMENT_STATUSES.has(status) ? status : 'active',
         notes: asText(row.notes),
         created_by: auth.user.id,

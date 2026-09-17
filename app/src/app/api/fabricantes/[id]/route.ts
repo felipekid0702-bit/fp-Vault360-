@@ -19,9 +19,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    await softDeleteManufacturer(params.id)
+    const body = await request.json().catch(() => ({}))
+    await softDeleteManufacturer(params.id, typeof body.reason === 'string' ? body.reason : undefined)
     return NextResponse.json({ success: true })
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Erro ao excluir fabricante.' }, { status: 400 })

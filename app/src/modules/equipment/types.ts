@@ -17,6 +17,7 @@ export interface Equipment {
   manufacture_date: string | null
   acquisition_date: string | null
   first_use_date: string | null
+  invoice_number: string | null
   lifespan_months: number | null
   expiration_date: string | null
   certification: string | null
@@ -41,6 +42,7 @@ export interface EquipmentInput {
   manufacture_date?: string
   acquisition_date?: string
   first_use_date?: string
+  invoice_number?: string
   lifespan_months?: number
   certification?: string
   ca_number?: string

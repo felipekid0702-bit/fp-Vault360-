@@ -2,7 +2,7 @@ import { createServerSupabaseClient } from '@/shared/lib/supabase/server'
 import { getAuthenticatedTenant } from '@/shared/lib/supabase/tenant'
 import type { CreateInspectionInput, Inspection } from './types'
 
-export async function listInspections(filters?: { equipmentId?: string; result?: string }) {
+export async function listInspections(filters?: { equipmentId?: string; result?: string; page?: number; pageSize?: number }) {
   const supabase = createServerSupabaseClient()
   let query = supabase
     .from('inspections')
@@ -12,6 +12,9 @@ export async function listInspections(filters?: { equipmentId?: string; result?:
 
   if (filters?.equipmentId) query = query.eq('equipment_id', filters.equipmentId)
   if (filters?.result) query = query.eq('result', filters.result)
+  const page = Math.max(1, filters?.page ?? 1)
+  const pageSize = Math.min(100, Math.max(1, filters?.pageSize ?? 50))
+  query = query.range((page - 1) * pageSize, page * pageSize - 1)
 
   const { data, error } = await query
   if (error) throw error

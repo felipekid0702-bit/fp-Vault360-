@@ -1,4 +1,7 @@
 ﻿import { getDashboardSummary } from '@/modules/bi/service'
+import { ReportExportButton } from '@/modules/bi/components/ReportExportButton'
+import { listCategories, listManufacturers, listClients } from '@/modules/inventory/service'
+import { listServices } from '@/modules/services/service'
 
 function formatValue(value: string | number | undefined, suffix = '') {
   if (value === undefined || value === null || value === '') return '0'
@@ -16,8 +19,9 @@ function StatCard({ label, value, tone }: { label: string; value: string | numbe
   )
 }
 
-export default async function ReportsPage() {
-  const summary = await getDashboardSummary()
+export default async function ReportsPage({ searchParams }: { searchParams: { from?: string; to?: string; client_id?: string; manufacturer_id?: string; category_id?: string; service_id?: string } }) {
+  const [summary, categories, manufacturers, clients, services] = await Promise.all([getDashboardSummary(), listCategories(), listManufacturers(), listClients(), listServices()])
+  const exportQuery = new URLSearchParams(Object.entries(searchParams).filter(([, value]) => Boolean(value)) as Array<[string, string]>).toString()
 
   const equipment = summary.equipment as any
   const compliance = summary.compliance as any
@@ -60,20 +64,19 @@ export default async function ReportsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <a
-            href="/api/bi/export?format=csv"
-            className="rounded-lg border border-brand-200 bg-white px-3 py-2 text-sm font-medium text-brand-700 transition hover:border-brand-300 hover:bg-brand-50"
-          >
-            Exportar CSV
-          </a>
-          <a
-            href="/api/bi/export?format=json"
-            className="rounded-lg bg-brand-700 px-3 py-2 text-sm font-medium text-white transition hover:bg-brand-800"
-          >
-            Exportar JSON
-          </a>
+          <ReportExportButton query={exportQuery ? `&${exportQuery}` : ''} />
         </div>
       </div>
+
+      <form className="grid gap-3 rounded-xl border border-brand-100 bg-white p-4 shadow-sm md:grid-cols-6">
+        <input type="date" name="from" defaultValue={searchParams.from} className="rounded border px-3 py-2 text-sm" aria-label="Período inicial" />
+        <input type="date" name="to" defaultValue={searchParams.to} className="rounded border px-3 py-2 text-sm" aria-label="Período final" />
+        <select name="client_id" defaultValue={searchParams.client_id ?? ''} className="rounded border px-3 py-2 text-sm"><option value="">Todos os clientes</option>{clients.map((item: any) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+        <select name="manufacturer_id" defaultValue={searchParams.manufacturer_id ?? ''} className="rounded border px-3 py-2 text-sm"><option value="">Todos os fabricantes</option>{manufacturers.map((item: any) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+        <select name="category_id" defaultValue={searchParams.category_id ?? ''} className="rounded border px-3 py-2 text-sm"><option value="">Todas as categorias</option>{categories.map((item: any) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+        <select name="service_id" defaultValue={searchParams.service_id ?? ''} className="rounded border px-3 py-2 text-sm"><option value="">Todos os serviços</option>{services.map((item: any) => <option key={item.id} value={item.id}>{item.name ?? item.work_order}</option>)}</select>
+        <button className="rounded bg-brand-700 px-3 py-2 text-sm text-white md:col-span-6 md:w-fit">Aplicar filtros</button>
+      </form>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map(([label, value, tone]) => (

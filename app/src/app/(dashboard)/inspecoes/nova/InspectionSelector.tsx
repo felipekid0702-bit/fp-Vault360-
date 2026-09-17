@@ -36,7 +36,7 @@ export function InspectionSelector({ equipment, templates }: { equipment: Equipm
         </label>
       </div>
       {!equipment.length && <p className="mt-4 text-sm text-amber-700">Cadastre um equipamento antes de iniciar uma inspeção.</p>}
-      {equipmentId && !availableTemplates.length && <p className="mt-4 text-sm text-amber-700">Não há fichas FP cadastradas. Cadastre um template FP01–FP12 antes de iniciar.</p>}
+      {equipmentId && !availableTemplates.length && <p className="mt-4 text-sm text-amber-700">Não há fichas de inspeção cadastradas para este equipamento. Cadastre ou ative um template antes de continuar.</p>}
       <button type="button" disabled={!equipmentId || !templateId} onClick={() => router.push(`/inspecoes/nova?equipmentId=${equipmentId}&templateId=${templateId}`)} className="mt-5 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">Abrir ficha de inspeção</button>
     </div>
   )

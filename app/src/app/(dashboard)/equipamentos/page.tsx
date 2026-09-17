@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { listEquipment } from '@/modules/equipment/service'
 import { EquipmentForm } from '@/modules/equipment/components/EquipmentForm'
 import { listCategories, listManufacturers, listClients } from '@/modules/inventory/service'
@@ -64,7 +65,11 @@ export default async function EquipmentPage({ searchParams }: { searchParams: { 
           <tbody className="divide-y divide-brand-50">
             {equipment?.map((item: any) => (
               <tr key={item.id}>
-                <td className="px-4 py-3 font-medium">{item.model}</td>
+                <td className="px-4 py-3 font-medium">
+                  <Link href={`/equipamentos/${item.id}`} className="text-brand-700 hover:underline">
+                    {item.model}
+                  </Link>
+                </td>
                 <td className="px-4 py-3">{item.serial_number ?? '—'}</td>
                 <td className="px-4 py-3">{item.category?.name ?? '—'}</td>
                 <td className="px-4 py-3">{item.manufacturer?.name ?? '—'}</td>

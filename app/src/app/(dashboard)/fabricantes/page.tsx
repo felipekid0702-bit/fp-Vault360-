@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { listManufacturers } from '@/modules/inventory/service'
 import { ManufacturerForm } from '@/modules/inventory/components/ManufacturerForm'
 

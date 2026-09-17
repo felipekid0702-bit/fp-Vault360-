@@ -18,7 +18,11 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Erro ao atualizar serviço.' }, { status: 400 }) }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
-  try { await softDeleteService(params.id); return NextResponse.json({ success: true }) }
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const body = await request.json().catch(() => ({}))
+    await softDeleteService(params.id, typeof body.reason === 'string' ? body.reason : undefined)
+    return NextResponse.json({ success: true })
+  }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'Erro ao excluir serviço.' }, { status: 400 }) }
 }

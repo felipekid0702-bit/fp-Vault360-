@@ -16,6 +16,7 @@ const equipmentInputSchema = z.object({
   manufacture_date: z.string().date().optional(),
   acquisition_date: z.string().date().optional(),
   first_use_date: z.string().date().optional(),
+  invoice_number: z.string().trim().max(120).optional(),
   lifespan_months: z.number().int().positive().optional(),
   certification: z.string().optional(),
   ca_number: z.string().optional(),

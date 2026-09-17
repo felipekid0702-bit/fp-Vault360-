@@ -12,14 +12,14 @@ export default async function DashboardPage() {
     ['Vencidos', equipment?.total_expired ?? 0],
     ['Conformidade', `${compliance?.compliance_percent ?? 0}%`],
     ['FP Index', `${executive?.fp_index ?? 0}%`],
-    ['Sa�de do invent�rio', `${executive?.inventory_health_score ?? 0}%`],
+    ['Saúde do inventário', `${executive?.inventory_health_score ?? 0}%`],
   ]
 
   return (
     <section className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-brand-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-brand-900/70">Painel executivo com indicadores prim�rios do FP Vault360�.</p>
+        <p className="mt-1 text-sm text-brand-900/70">Painel executivo com indicadores primários do FP Vault360°.</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">

@@ -21,8 +21,9 @@ const RESULT_COLOR: Record<string, string> = {
   rejected: 'bg-red-100 text-red-800',
 }
 
-export default async function InspectionsPage() {
-  const inspections = await listInspections()
+export default async function InspectionsPage({ searchParams }: { searchParams: { page?: string } }) {
+  const page = Math.max(1, Number(searchParams.page ?? 1) || 1)
+  const inspections = await listInspections({ page })
 
   return (
     <div>
@@ -34,6 +35,11 @@ export default async function InspectionsPage() {
         >
           + Nova Inspeção
         </Link>
+      </div>
+      <div className="mt-4 flex items-center justify-end gap-2 text-sm">
+        {page > 1 && <Link href={`/inspecoes?page=${page - 1}`} className="rounded border border-brand-200 px-3 py-2 text-brand-700">Anterior</Link>}
+        <span className="text-brand-900/60">Página {page}</span>
+        {inspections?.length === 50 && <Link href={`/inspecoes?page=${page + 1}`} className="rounded border border-brand-200 px-3 py-2 text-brand-700">Próxima</Link>}
       </div>
 
       <div className="mt-6 overflow-hidden rounded-lg border border-brand-100 bg-white">
@@ -52,7 +58,9 @@ export default async function InspectionsPage() {
             {inspections?.map((item: any) => (
               <tr key={item.id}>
                 <td className="px-4 py-3 font-medium">
-                  {item.equipment?.model} {item.equipment?.serial_number ? `· ${item.equipment.serial_number}` : ''}
+                  <Link href={`/inspecoes/${item.id}`} className="text-brand-700 hover:underline">
+                    {item.equipment?.model} {item.equipment?.serial_number ? `· ${item.equipment.serial_number}` : ''}
+                  </Link>
                 </td>
                 <td className="px-4 py-3">{TYPE_LABEL[item.type]}</td>
                 <td className="px-4 py-3">{item.inspector?.full_name ?? '—'}</td>

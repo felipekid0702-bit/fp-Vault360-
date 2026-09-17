@@ -18,7 +18,7 @@ function isOwnerStructureMissing(error: { code?: string; message?: string }) {
 // por tenant no banco — este serviço nunca precisa (nem deve) filtrar por
 // tenant_id manualmente, o Postgres já faz isso.
 
-export async function listEquipment(filters?: { status?: EquipmentStatus; search?: string; ownerType?: 'fp' | 'client'; clientId?: string; manufacturerId?: string; categoryId?: string }) {
+export async function listEquipment(filters?: { status?: EquipmentStatus; search?: string; ownerType?: 'fp' | 'client'; clientId?: string; manufacturerId?: string; categoryId?: string; page?: number; pageSize?: number }) {
   const supabase = createServerSupabaseClient()
   let query = supabase
     .from('equipment')
@@ -35,6 +35,9 @@ export async function listEquipment(filters?: { status?: EquipmentStatus; search
   if (filters?.search) {
     query = query.or(`model.ilike.%${filters.search}%,serial_number.ilike.%${filters.search}%,internal_code.ilike.%${filters.search}%`)
   }
+  const page = Math.max(1, filters?.page ?? 1)
+  const pageSize = Math.min(100, Math.max(1, filters?.pageSize ?? 50))
+  query = query.range((page - 1) * pageSize, page * pageSize - 1)
 
   let { data, error } = await query
   if (error && isSchemaNotMigrated(error)) {
@@ -159,7 +162,7 @@ export async function updateEquipment(id: string, input: Partial<EquipmentInput>
   return data as Equipment
 }
 
-export async function softDeleteEquipment(id: string) {
+export async function softDeleteEquipment(id: string, reason?: string) {
   const supabase = createServerSupabaseClient()
   const { user, tenantId } = await requirePermission(supabase, 'equipment:delete')
   const { error } = await supabase
@@ -168,5 +171,14 @@ export async function softDeleteEquipment(id: string) {
     .eq('id', id)
     .eq('tenant_id', tenantId)
   if (error) throw error
-  await supabase.rpc('log_audit', { p_action: 'equipment_deleted', p_entity: 'equipment', p_entity_id: id })
+  await supabase.rpc('log_audit', {
+    p_action: 'equipment_deleted',
+    p_entity: 'equipment',
+    p_entity_id: id,
+    p_metadata: {
+      reason: reason ?? 'Exclusão lógica solicitada pela operação',
+      deleted_by: user.id,
+      tenant_id: tenantId,
+    },
+  })
 }

@@ -44,7 +44,7 @@ export function InlineEquipmentCreate({
 
   return (
     <div className="mt-2 rounded-lg border border-brand-100 bg-brand-50 p-4">
-      <p className="text-sm text-brand-900/70">Caso o equipamento não esteja cadastrado, clique aqui para cadastrar.</p>
+      <p className="text-sm text-brand-900/70">Caso o equipamento ainda não esteja cadastrado, clique aqui para cadastrar.</p>
       {!open ? (
         <button type="button" onClick={() => setOpen(true)} className="mt-3 rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white">
           Cadastrar Equipamento

@@ -12,6 +12,8 @@ const updateSchema = z.object({
   internal_code: z.string().optional(),
   serial_number: z.string().optional(),
   acquisition_date: z.string().date().optional(),
+  first_use_date: z.string().date().optional(),
+  invoice_number: z.string().trim().max(120).optional(),
   lifespan_months: z.number().int().positive().optional(),
   notes: z.string().optional(),
 })
@@ -42,9 +44,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    await softDeleteEquipment(params.id)
+    const body = await req.json().catch(() => ({}))
+    await softDeleteEquipment(params.id, typeof body.reason === 'string' ? body.reason : undefined)
     return NextResponse.json({ success: true })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 })

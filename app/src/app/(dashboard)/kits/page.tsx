@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { listKits } from '@/modules/kits/service'
 import { KitForm } from '@/modules/kits/components/KitForm'
 import { listClients } from '@/modules/inventory/service'
@@ -65,7 +66,11 @@ export default async function KitsPage() {
           <tbody className="divide-y divide-brand-50">
             {kits.map((kit: any) => (
               <tr key={kit.id}>
-                <td className="px-4 py-3 font-medium">{kit.name}</td>
+                <td className="px-4 py-3 font-medium">
+                  <Link href={`/kits/${kit.id}`} className="text-brand-700 hover:underline">
+                    {kit.name}
+                  </Link>
+                </td>
                 <td className="px-4 py-3">{kit.code ?? '—'}</td>
                 <td className="px-4 py-3">{kit.client?.name ?? 'FP Soluções'}</td>
                 <td className="px-4 py-3">{kit.items?.length ?? 0}</td>

@@ -40,12 +40,21 @@ export async function updateManufacturer(id: string, input: { name?: string; web
   return data
 }
 
-export async function softDeleteManufacturer(id: string) {
+export async function softDeleteManufacturer(id: string, reason?: string) {
   const supabase = createServerSupabaseClient()
   const { user, tenantId } = await requirePermission(supabase, 'manufacturers:delete')
   const { error } = await supabase.from('manufacturers').update({ deleted_at: new Date().toISOString(), updated_by: user.id }).eq('id', id).eq('tenant_id', tenantId)
   if (error) throw error
-  await supabase.rpc('log_audit', { p_action: 'manufacturer_deleted', p_entity: 'manufacturers', p_entity_id: id })
+  await supabase.rpc('log_audit', {
+    p_action: 'manufacturer_deleted',
+    p_entity: 'manufacturers',
+    p_entity_id: id,
+    p_metadata: {
+      reason: reason ?? 'Exclusão lógica solicitada pela operação',
+      deleted_by: user.id,
+      tenant_id: tenantId,
+    },
+  })
 }
 
 export interface ClientInput {
@@ -90,12 +99,21 @@ export async function updateClient(id: string, input: Partial<ClientInput>) {
   return data
 }
 
-export async function softDeleteClient(id: string) {
+export async function softDeleteClient(id: string, reason?: string) {
   const supabase = createServerSupabaseClient()
   const { user, tenantId } = await requirePermission(supabase, 'clients:delete')
   const { error } = await supabase.from('clients').update({ deleted_at: new Date().toISOString(), updated_by: user.id }).eq('id', id).eq('tenant_id', tenantId)
   if (error) throw error
-  await supabase.rpc('log_audit', { p_action: 'client_deleted', p_entity: 'clients', p_entity_id: id })
+  await supabase.rpc('log_audit', {
+    p_action: 'client_deleted',
+    p_entity: 'clients',
+    p_entity_id: id,
+    p_metadata: {
+      reason: reason ?? 'Exclusão lógica solicitada pela operação',
+      deleted_by: user.id,
+      tenant_id: tenantId,
+    },
+  })
 }
 
 export async function listCategories() {

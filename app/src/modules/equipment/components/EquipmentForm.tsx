@@ -23,7 +23,7 @@ export function EquipmentForm({
   clients?: CatalogOption[]
   services?: Array<{ id: string; name?: string; work_order?: string; client_id?: string }>
   kits?: Array<{ id: string; name: string }>
-  equipment?: Pick<Equipment, 'id' | 'model' | 'category_id' | 'manufacturer_id' | 'serial_number' | 'internal_code' | 'acquisition_date' | 'lifespan_months' | 'owner_type' | 'client_id' | 'service_id'>
+  equipment?: Pick<Equipment, 'id' | 'model' | 'category_id' | 'manufacturer_id' | 'serial_number' | 'internal_code' | 'acquisition_date' | 'first_use_date' | 'invoice_number' | 'lifespan_months' | 'owner_type' | 'client_id' | 'service_id'>
   onSaved?: () => void
 }) {
   const router = useRouter()
@@ -38,6 +38,8 @@ export function EquipmentForm({
   const [serialNumber, setSerialNumber] = useState(equipment?.serial_number ?? '')
   const [internalCode, setInternalCode] = useState(equipment?.internal_code ?? '')
   const [acquisitionDate, setAcquisitionDate] = useState(equipment?.acquisition_date ?? '')
+  const [firstUseDate, setFirstUseDate] = useState(equipment?.first_use_date ?? '')
+  const [invoiceNumber, setInvoiceNumber] = useState(equipment?.invoice_number ?? '')
   const [lifespan, setLifespan] = useState(equipment?.lifespan_months?.toString() ?? '')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -62,6 +64,8 @@ export function EquipmentForm({
           serial_number: serialNumber || undefined,
           internal_code: internalCode || undefined,
           acquisition_date: acquisitionDate || undefined,
+          first_use_date: firstUseDate || undefined,
+          invoice_number: invoiceNumber || undefined,
           lifespan_months: lifespan ? Number(lifespan) : undefined,
         }),
       })
@@ -73,7 +77,7 @@ export function EquipmentForm({
       }
       setSuccess(equipment ? 'Equipamento atualizado com sucesso.' : 'Equipamento cadastrado com sucesso.')
       if (!equipment) {
-        setModel(''); setCategoryId(''); setManufacturerId(''); setOwnerType('fp'); setClientId(''); setServiceId(''); setKitId(''); setSerialNumber(''); setInternalCode(''); setAcquisitionDate(''); setLifespan('')
+        setModel(''); setCategoryId(''); setManufacturerId(''); setOwnerType('fp'); setClientId(''); setServiceId(''); setKitId(''); setSerialNumber(''); setInternalCode(''); setAcquisitionDate(''); setFirstUseDate(''); setInvoiceNumber(''); setLifespan('')
         setOpen(false)
       }
       onSaved?.()
@@ -96,6 +100,8 @@ export function EquipmentForm({
       <label className="text-sm font-medium">Nº Série / Lote<input value={serialNumber} onChange={(event) => setSerialNumber(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 px-3 py-2 font-normal" /></label>
       <label className="text-sm font-medium">Código interno<input value={internalCode} onChange={(event) => setInternalCode(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 px-3 py-2 font-normal" /></label>
       <label className="text-sm font-medium">Data de aquisição<input type="date" value={acquisitionDate} onChange={(event) => setAcquisitionDate(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 px-3 py-2 font-normal" /></label>
+      <label className="text-sm font-medium">Data da primeira utilização<input type="date" value={firstUseDate} onChange={(event) => setFirstUseDate(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 px-3 py-2 font-normal" /></label>
+      <label className="text-sm font-medium">Nota fiscal (NF)<input value={invoiceNumber} onChange={(event) => setInvoiceNumber(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 px-3 py-2 font-normal" /></label>
       <label className="text-sm font-medium">Vida útil (meses)<input type="number" min="1" value={lifespan} onChange={(event) => setLifespan(event.target.value)} className="mt-1 block w-full rounded-md border border-brand-100 px-3 py-2 font-normal" /></label>
     </div>{error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}{success && <p role="status" className="mt-3 text-sm text-green-700">{success}</p>}<div className="mt-4 flex justify-end"><button disabled={saving} className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">{saving ? 'Salvando...' : equipment ? 'Atualizar equipamento' : 'Salvar equipamento'}</button></div></form>}
   </>

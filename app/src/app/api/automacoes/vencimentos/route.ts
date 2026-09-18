@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/shared/lib/supabase/server'
+import { formatDateBR } from '@/shared/lib/dates'
 
 export async function POST() {
   try {
@@ -14,8 +15,8 @@ export async function POST() {
     if (equipment.error) throw equipment.error
     if (certifications.error) throw certifications.error
     const notifications = [
-      ...(equipment.data ?? []).map((item) => ({ tenant_id: profile.tenant_id, user_id: auth.user?.id, channel: 'email', title: 'Equipamento próximo do vencimento', body: `${item.model} vence em ${item.expiration_date}` })),
-      ...(certifications.data ?? []).map((item) => ({ tenant_id: profile.tenant_id, user_id: item.user_id, channel: 'email', title: 'Certificação próxima do vencimento', body: `Certificação vence em ${item.expires_at}` })),
+      ...(equipment.data ?? []).map((item) => ({ tenant_id: profile.tenant_id, user_id: auth.user?.id, channel: 'email', title: 'Equipamento próximo do vencimento', body: `${item.model} vence em ${formatDateBR(item.expiration_date)}` })),
+      ...(certifications.data ?? []).map((item) => ({ tenant_id: profile.tenant_id, user_id: item.user_id, channel: 'email', title: 'Certificação próxima do vencimento', body: `Certificação vence em ${formatDateBR(item.expires_at)}` })),
     ]
     if (notifications.length) {
       const { error } = await supabase.from('notifications').insert(notifications)

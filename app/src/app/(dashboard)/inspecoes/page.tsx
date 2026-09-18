@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { listInspections } from '@/modules/inspections/service'
+import { formatDateBR } from '@/shared/lib/dates'
 
 const TYPE_LABEL: Record<string, string> = {
   acquisition: 'Aquisição',
@@ -64,8 +65,8 @@ export default async function InspectionsPage({ searchParams }: { searchParams: 
                 </td>
                 <td className="px-4 py-3">{TYPE_LABEL[item.type]}</td>
                 <td className="px-4 py-3">{item.inspector?.full_name ?? '—'}</td>
-                <td className="px-4 py-3">{new Date(item.performed_at).toLocaleDateString('pt-BR')}</td>
-                <td className="px-4 py-3">{item.next_due_date ?? '—'}</td>
+                <td className="px-4 py-3">{formatDateBR(item.performed_at)}</td>
+                <td className="px-4 py-3">{formatDateBR(item.next_due_date)}</td>
                 <td className="px-4 py-3">
                   {item.result && (
                     <span className={`rounded-full px-2 py-1 text-xs font-medium ${RESULT_COLOR[item.result]}`}>

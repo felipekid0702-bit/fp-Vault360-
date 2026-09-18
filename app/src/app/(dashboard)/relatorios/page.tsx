@@ -2,6 +2,7 @@
 import { ReportExportButton } from '@/modules/bi/components/ReportExportButton'
 import { listCategories, listManufacturers, listClients } from '@/modules/inventory/service'
 import { listServices } from '@/modules/services/service'
+import { formatDateBR } from '@/shared/lib/dates'
 
 function formatValue(value: string | number | undefined, suffix = '') {
   if (value === undefined || value === null || value === '') return '0'
@@ -305,7 +306,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: { fr
                 <div key={item.id} className="rounded-lg border border-brand-100 p-3 text-sm">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-medium text-brand-900">{item.action}</span>
-                    <span className="text-brand-700/60">{new Date(item.created_at).toLocaleDateString('pt-BR')}</span>
+                    <span className="text-brand-700/60">{formatDateBR(item.created_at)}</span>
                   </div>
                   <p className="mt-1 text-brand-900/70">{item.entity}</p>
                 </div>
@@ -323,7 +324,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: { fr
               recentExpired.slice(0, 6).map((item: any) => (
                 <div key={item.id} className="flex items-center justify-between rounded-lg bg-red-50 p-3 text-sm">
                   <span className="text-red-900/80">{item.model || `Equipamento ${item.id}`}</span>
-                  <strong className="text-red-700">{new Date(item.expiration_date).toLocaleDateString('pt-BR')}</strong>
+                  <strong className="text-red-700">{formatDateBR(item.expiration_date)}</strong>
                 </div>
               ))
             ) : (

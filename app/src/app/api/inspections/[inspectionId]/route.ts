@@ -9,8 +9,28 @@ const editSchema = z.object({
   next_due_date: z.string().date().optional(),
   result: z.enum(['approved', 'approved_with_restriction', 'rejected']).optional(),
   verdict: z.enum(['fit', 'unfit']).optional(),
+  items: z.array(z.object({
+    id: z.string().uuid().optional(),
+    checklist_item_id: z.string().uuid(),
+    status: z.enum(['ok', 'nok', 'na']),
+    classification: z.enum(['C', 'B', 'AV', 'AR', 'R']).nullable(),
+    observation: z.string().optional(),
+    action_required: z.string().optional(),
+  })).optional(),
 })
 
+function buildFieldChanges(previous: Record<string, any>, next: Record<string, any>) {
+  const changes: Array<{ field: string; old_value: unknown; new_value: unknown }> = []
+  const keys = Array.from(new Set([...Object.keys(previous), ...Object.keys(next)]))
+  for (const key of keys) {
+    const oldValue = previous[key]
+    const newValue = next[key]
+    if (JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+      changes.push({ field: key, old_value: oldValue, new_value: newValue })
+    }
+  }
+  return changes
+}
 
 export async function PATCH(request: NextRequest, { params }: { params: { inspectionId: string } }) {
   const parsed = editSchema.safeParse(await request.json())
@@ -23,23 +43,40 @@ export async function PATCH(request: NextRequest, { params }: { params: { inspec
     if (error || !inspection) throw new Error('Inspeção não encontrada.')
 
     const proposed = parsed.data
-    const changesStatus = proposed.result !== undefined || proposed.verdict !== undefined
+    const { items, ...inspectionData } = proposed
+    const { data: currentItems, error: itemsError } = await supabase.from('inspection_items_result').select('id, checklist_item_id, status, classification, observation, action_required').eq('inspection_id', inspection.id)
+    if (itemsError) throw itemsError
+    const normalizedCurrentItems = (currentItems ?? []).map(({ id, ...item }) => item)
+    const normalizedProposedItems = items?.map(({ id, ...item }) => item)
+    const itemsChanged = normalizedProposedItems && JSON.stringify(normalizedProposedItems) !== JSON.stringify(normalizedCurrentItems)
+    const changesStatus = proposed.result !== undefined || proposed.verdict !== undefined || Boolean(itemsChanged)
+    const previousData = { ...inspection, items: normalizedCurrentItems }
+    const proposedData = { ...inspectionData, ...(normalizedProposedItems ? { items: normalizedProposedItems } : {}) }
+    const fieldChanges = buildFieldChanges(previousData, proposedData)
     if (changesStatus) {
       const { data, error: requestError } = await supabase.from('inspection_change_requests').insert({
         tenant_id: tenantId,
         inspection_id: inspection.id,
         requested_by: user.id,
-        previous_data: { result: inspection.result, verdict: inspection.verdict },
-        proposed_data: proposed,
+        previous_data: previousData,
+        proposed_data: proposedData,
       }).select().single()
       if (requestError) throw requestError
-      await supabase.rpc('log_audit', { p_action: 'inspection_change_requested', p_entity: 'inspections', p_entity_id: inspection.id, p_metadata: { request_id: data.id, previous_data: { result: inspection.result, verdict: inspection.verdict }, proposed_data: proposed } })
+      await supabase.rpc('log_audit', { p_action: 'inspection_change_requested', p_entity: 'inspections', p_entity_id: inspection.id, p_metadata: { request_id: data.id, user_id: user.id, user_profile: 'local_user', requested_at: new Date().toISOString(), field_changes: fieldChanges, previous_data: previousData, proposed_data: proposedData } })
       return NextResponse.json({ data, approvalRequired: true }, { status: 202 })
     }
 
-    const { data, error: updateError } = await supabase.from('inspections').update({ ...proposed, updated_by: user.id }).eq('id', inspection.id).eq('tenant_id', tenantId).select().single()
+    const { data, error: updateError } = await supabase.from('inspections').update({ ...inspectionData, updated_by: user.id }).eq('id', inspection.id).eq('tenant_id', tenantId).select().single()
     if (updateError) throw updateError
-    await supabase.rpc('log_audit', { p_action: 'inspection_updated', p_entity: 'inspections', p_entity_id: inspection.id, p_metadata: { previous_data: inspection, proposed_data: proposed } })
+    if (items) {
+      for (const item of items) {
+        const { id, ...itemData } = item
+        if (!id) throw new Error('Item de inspeção inválido.')
+        const { error: itemUpdateError } = await supabase.from('inspection_items_result').update(itemData).eq('id', id).eq('inspection_id', inspection.id)
+        if (itemUpdateError) throw itemUpdateError
+      }
+    }
+    await supabase.rpc('log_audit', { p_action: 'inspection_updated', p_entity: 'inspections', p_entity_id: inspection.id, p_metadata: { user_id: user.id, user_profile: 'local_user', changed_at: new Date().toISOString(), field_changes: fieldChanges, previous_data: previousData, proposed_data: { ...inspectionData, ...(items ? { items } : {}) } } })
     return NextResponse.json({ data })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 })

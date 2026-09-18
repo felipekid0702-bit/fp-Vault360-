@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx'
 import PDFDocument from 'pdfkit'
 import { createServerSupabaseClient } from '@/shared/lib/supabase/server'
 import { requirePermission } from '@/shared/lib/supabase/authorization'
+import { formatDateBR } from '@/shared/lib/dates'
 
 export const runtime = 'nodejs'
 
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     if (params.get('service_id')) query = query.eq('service_id', params.get('service_id') as string)
     const { data, error } = await query
     if (error) throw error
-    const rows = (data ?? []).map((item: any) => ({ Modelo: item.model, 'Nº Série': item.serial_number, 'Nota Fiscal': item.invoice_number, 'Data da Compra': item.acquisition_date, 'Primeira Utilização': item.first_use_date, Status: item.status, Categoria: item.category?.name, Fabricante: item.manufacturer?.name, Cliente: item.client?.name }))
+    const rows = (data ?? []).map((item: any) => ({ Modelo: item.model, 'Nº Série': item.serial_number, 'Nota Fiscal': item.invoice_number, 'Data da Compra': formatDateBR(item.acquisition_date), 'Primeira Utilização': formatDateBR(item.first_use_date), Status: item.status, Categoria: item.category?.name, Fabricante: item.manufacturer?.name, Cliente: item.client?.name }))
     const format = params.get('format') ?? 'csv'
     if (format === 'xlsx' || format === 'excel') {
       const sheet = XLSX.utils.json_to_sheet(rows)

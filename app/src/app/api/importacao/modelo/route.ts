@@ -6,7 +6,7 @@ export const runtime = 'nodejs'
 export async function GET() {
   const worksheet = XLSX.utils.aoa_to_sheet([
     ['Modelo', 'Categoria', 'Fabricante', 'Nº Série / Lote', 'Código interno', 'Nota Fiscal (NF)', 'Data da Compra', 'Data da Primeira Utilização', 'Status', 'Observações'],
-    ['Exemplo Vertel', 'Cinto', 'Fabricante exemplo', 'LOTE-001', 'FP-001', 'NF-0001', '2026-01-15', '2026-02-01', 'active', 'Substitua esta linha pelos seus equipamentos'],
+    ['Exemplo Vertel', 'Cinto', 'Fabricante exemplo', 'LOTE-001', 'FP-001', 'NF-0001', '15/01/2026', '01/02/2026', 'active', 'Substitua esta linha pelos seus equipamentos'],
   ])
   worksheet['!cols'] = [{ wch: 28 }, { wch: 34 }, { wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 28 }, { wch: 14 }, { wch: 48 }]
   const workbook = XLSX.utils.book_new()

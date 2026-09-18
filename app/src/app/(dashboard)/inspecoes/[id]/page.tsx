@@ -1,14 +1,8 @@
 import { notFound } from 'next/navigation'
 import { createServerSupabaseClient } from '@/shared/lib/supabase/server'
 import { InspectionEditForm } from '@/modules/inspections/components/InspectionEditForm'
-
-function formatDateTime(value?: string | null) {
-  if (!value) return '—'
-  return new Date(value).toLocaleString('pt-BR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  })
-}
+import { InspectionChangeDecision } from '@/modules/inspections/components/InspectionChangeDecision'
+import { formatDateTimeBR } from '@/shared/lib/dates'
 
 export default async function InspectionDetailPage({ params }: { params: { id: string } }) {
   const supabase = createServerSupabaseClient()
@@ -54,7 +48,7 @@ export default async function InspectionDetailPage({ params }: { params: { id: s
         <h1 className="mt-2 text-2xl font-semibold text-brand-900">{inspection.checklist?.name ?? 'Ficha de inspeção'}</h1>
         <p className="mt-1 text-sm text-brand-900/70">{inspection.equipment?.model ?? 'Equipamento'} · {inspection.equipment?.serial_number ?? 'Sem serial'}</p>
           </div>
-          <InspectionEditForm inspection={inspection} />
+          <InspectionEditForm inspection={{ ...inspection, items: (inspection.items ?? []).map((item: any) => ({ ...item, label: item.checklist_items?.label, section: item.checklist_items?.section })) }} />
         </div>
       </div>
 
@@ -66,8 +60,8 @@ export default async function InspectionDetailPage({ params }: { params: { id: s
             <InfoBlock label="Resultado" value={inspection.result ?? '—'} />
             <InfoBlock label="Veredito" value={inspection.verdict ?? '—'} />
             <InfoBlock label="Inspetor" value={inspection.inspector?.full_name ?? '—'} />
-            <InfoBlock label="Data da inspeção" value={formatDateTime(inspection.performed_at)} />
-            <InfoBlock label="Próximo vencimento" value={formatDateTime(inspection.next_due_date)} />
+            <InfoBlock label="Data da inspeção" value={formatDateTimeBR(inspection.performed_at)} />
+            <InfoBlock label="Próximo vencimento" value={formatDateTimeBR(inspection.next_due_date)} />
             <InfoBlock label="Local" value={inspection.inspection_location ?? '—'} />
             <InfoBlock label="Status do equipamento" value={inspection.equipment?.status ?? '—'} />
           </div>
@@ -115,10 +109,11 @@ export default async function InspectionDetailPage({ params }: { params: { id: s
         <div className="mt-4 space-y-3">
           {(changes ?? []).length ? (changes ?? []).map((change: any) => (
             <div key={change.id} className="rounded-lg border border-brand-100 p-3 text-sm">
-              <div className="flex items-center justify-between gap-2"><span className="font-medium text-brand-900">{change.status === 'approved' ? 'Aprovada' : change.status === 'rejected' ? 'Rejeitada' : 'Pendente'}</span><span className="text-brand-700/60">{formatDateTime(change.decided_at ?? change.created_at)}</span></div>
+                <div className="flex items-center justify-between gap-2"><span className="font-medium text-brand-900">{change.status === 'approved' ? 'Aprovada' : change.status === 'rejected' ? 'Rejeitada' : 'Pendente'}</span><span className="text-brand-700/60">{formatDateTimeBR(change.decided_at ?? change.created_at)}</span></div>
               <p className="mt-1 text-brand-900/70">Solicitante: {change.requester?.full_name ?? '—'} · Aprovador: {change.approver?.full_name ?? '—'}</p>
               <p className="mt-1 whitespace-pre-wrap text-brand-900/70">Alteração: {JSON.stringify(change.proposed_data ?? {})}</p>
               {change.rejection_reason && <p className="mt-1 text-red-700">Motivo da rejeição: {change.rejection_reason}</p>}
+              {change.status === 'pending' && <InspectionChangeDecision id={change.id} />}
             </div>
           )) : <p className="text-sm text-brand-900/60">Nenhuma solicitação de alteração registrada.</p>}
         </div>
@@ -132,7 +127,7 @@ export default async function InspectionDetailPage({ params }: { params: { id: s
               <div key={item.id} className="rounded-lg border border-brand-100 p-3 text-sm">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-medium text-brand-900">{item.action}</span>
-                  <span className="text-brand-700/60">{formatDateTime(item.created_at)}</span>
+                  <span className="text-brand-700/60">{formatDateTimeBR(item.created_at)}</span>
                 </div>
                 <p className="mt-1 text-brand-900/70">Usuário: {item.user?.full_name ?? 'Sistema'}</p>
                 <p className="mt-1 whitespace-pre-wrap text-brand-900/70">{JSON.stringify(item.metadata ?? {}, null, 2)}</p>

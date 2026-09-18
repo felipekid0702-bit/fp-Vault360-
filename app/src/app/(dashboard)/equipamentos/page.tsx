@@ -4,6 +4,7 @@ import { EquipmentForm } from '@/modules/equipment/components/EquipmentForm'
 import { listCategories, listManufacturers, listClients } from '@/modules/inventory/service'
 import { listServices } from '@/modules/services/service'
 import { listKits } from '@/modules/kits/service'
+import { formatDateBR } from '@/shared/lib/dates'
 
 const STATUS_LABEL: Record<string, string> = {
   active: 'Ativo',
@@ -73,7 +74,7 @@ export default async function EquipmentPage({ searchParams }: { searchParams: { 
                 <td className="px-4 py-3">{item.serial_number ?? '—'}</td>
                 <td className="px-4 py-3">{item.category?.name ?? '—'}</td>
                 <td className="px-4 py-3">{item.manufacturer?.name ?? '—'}</td>
-                <td className="px-4 py-3">{item.expiration_date ?? '—'}</td>
+                <td className="px-4 py-3">{formatDateBR(item.expiration_date)}</td>
                 <td className="px-4 py-3">{item.inspections?.[0]?.result === 'rejected' || item.inspections?.[0]?.verdict === 'unfit' ? 'INAPTO' : item.inspections?.[0]?.result === 'approved_with_restriction' ? 'AV' : item.inspections?.[0] ? 'APTO' : 'Não inspecionado'}</td>
                 <td className="px-4 py-3">
                   <span className={`rounded-full px-2 py-1 text-xs font-medium ${STATUS_COLOR[item.status]}`}>

@@ -7,9 +7,9 @@ import { requirePermission } from '@/shared/lib/supabase/authorization'
 const createSchema = z.object({
   full_name: z.string().trim().min(2),
   email: z.string().email(),
-  password: z.string().min(8),
+  password: z.string().min(8).optional(),
   access_type: z.enum(['fp', 'client']),
-  role_code: z.enum(['super_master', 'sup_master', 'master01', 'master02', 'master03', 'master04', 'submaster', 'sub_master01', 'client_portal']),
+  role_code: z.enum(['master01', 'master02', 'master03', 'master04', 'submaster', 'sub_master01', 'client_portal']),
   client_id: z.string().uuid().nullable().optional(),
 })
 
@@ -18,7 +18,17 @@ const resetSchema = z.object({ user_id: z.string().uuid(), password: z.string().
 async function assertAdmin() {
   const supabase = createServerSupabaseClient()
   const { user, tenantId } = await requirePermission(supabase, 'users:manage')
-  return { supabase, user, tenantId }
+  const { data: profile } = await supabase.from('users').select('is_super_master').eq('id', user.id).single()
+  if (profile?.is_super_master) return { supabase, user, tenantId, canCreateTeamAccess: true }
+  const { data: assignments, error } = await supabase.from('user_roles').select('roles!inner(code)').eq('user_id', user.id)
+  if (error) throw error
+  const roles = (assignments ?? []).flatMap((assignment: any) => {
+    const roleList = Array.isArray(assignment.roles) ? assignment.roles : [assignment.roles]
+    return roleList.map((role: any) => role?.code).filter(Boolean)
+  })
+  const canCreateTeamAccess = roles.some((role: string) => ['sup_master', 'master01', 'master02', 'master03'].includes(role.toLowerCase()))
+  if (!canCreateTeamAccess) throw new Error('Apenas SUPERIOR_MASTER e MASTER01, MASTER02 ou MASTER03 podem criar acessos.')
+  return { supabase, user, tenantId, canCreateTeamAccess }
 }
 
 export async function GET() {
@@ -38,8 +48,10 @@ export async function POST(request: NextRequest) {
   try {
     const { supabase, user, tenantId } = await assertAdmin()
     if (parsed.data.access_type === 'client' && !parsed.data.client_id) return NextResponse.json({ error: 'Selecione o cliente do acesso.' }, { status: 422 })
+    const password = parsed.data.password ?? '123456fp'
+    if (parsed.data.role_code === 'client_portal' && parsed.data.access_type !== 'client') return NextResponse.json({ error: 'Acesso de cliente exige vínculo com cliente.' }, { status: 422 })
     const admin = createServiceRoleClient()
-    const { data: auth, error: authError } = await admin.auth.admin.createUser({ email: parsed.data.email, password: parsed.data.password, email_confirm: true })
+    const { data: auth, error: authError } = await admin.auth.admin.createUser({ email: parsed.data.email, password, email_confirm: true })
     if (authError || !auth.user) throw authError ?? new Error('Não foi possível criar o usuário.')
     const { data: profile, error: profileError } = await admin.from('users').insert({ id: auth.user.id, tenant_id: tenantId, client_id: parsed.data.access_type === 'client' ? parsed.data.client_id : null, full_name: parsed.data.full_name, email: parsed.data.email, active: true, must_change_password: true, created_by: user.id, updated_by: user.id }).select().single()
     if (profileError) throw profileError

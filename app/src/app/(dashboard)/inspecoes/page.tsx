@@ -53,6 +53,7 @@ export default async function InspectionsPage({ searchParams }: { searchParams: 
               <th className="px-4 py-3">Data</th>
               <th className="px-4 py-3">Próx. Vencimento</th>
               <th className="px-4 py-3">Resultado</th>
+               <th className="px-4 py-3">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-brand-50">
@@ -74,11 +75,16 @@ export default async function InspectionsPage({ searchParams }: { searchParams: 
                     </span>
                   )}
                 </td>
+                 <td className="px-4 py-3">
+                   <Link href={`/inspecoes/${item.id}`} className="font-medium text-brand-700 hover:underline">
+                     Editar
+                   </Link>
+                 </td>
               </tr>
             ))}
             {!inspections?.length && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-brand-700/60">
+                 <td colSpan={7} className="px-4 py-8 text-center text-brand-700/60">
                   Nenhuma inspeção registrada ainda.
                 </td>
               </tr>

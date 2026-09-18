@@ -32,6 +32,25 @@ function buildFieldChanges(previous: Record<string, any>, next: Record<string, a
   return changes
 }
 
+async function resolveUserProfile(supabase: any, userId: string) {
+  const { data: assignments, error } = await supabase
+    .from('user_roles')
+    .select('roles!inner(code)')
+    .eq('user_id', userId)
+
+  if (error) return 'user'
+
+  const codes = (assignments ?? []).flatMap((assignment: any) => {
+    const roles = Array.isArray(assignment.roles) ? assignment.roles : assignment.roles ? [assignment.roles] : []
+    return roles.map((role: any) => String(role?.code ?? '').toLowerCase())
+  })
+
+  if (codes.includes('super_master') || codes.includes('sup_master')) return 'SUPERIOR_MASTER'
+  if (codes.some((code: string) => code.startsWith('master'))) return 'MASTER'
+  if (codes.some((code: string) => code.includes('submaster') || code.includes('sub_master'))) return 'SUBMASTER'
+  return 'USER'
+}
+
 export async function PATCH(request: NextRequest, { params }: { params: { inspectionId: string } }) {
   const parsed = editSchema.safeParse(await request.json())
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
@@ -53,6 +72,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { inspec
     const previousData = { ...inspection, items: normalizedCurrentItems }
     const proposedData = { ...inspectionData, ...(normalizedProposedItems ? { items: normalizedProposedItems } : {}) }
     const fieldChanges = buildFieldChanges(previousData, proposedData)
+    const actorProfile = await resolveUserProfile(supabase, user.id)
     if (changesStatus) {
       const { data, error: requestError } = await supabase.from('inspection_change_requests').insert({
         tenant_id: tenantId,
@@ -62,7 +82,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { inspec
         proposed_data: proposedData,
       }).select().single()
       if (requestError) throw requestError
-      await supabase.rpc('log_audit', { p_action: 'inspection_change_requested', p_entity: 'inspections', p_entity_id: inspection.id, p_metadata: { request_id: data.id, user_id: user.id, user_profile: 'local_user', requested_at: new Date().toISOString(), field_changes: fieldChanges, previous_data: previousData, proposed_data: proposedData } })
+      await supabase.rpc('log_audit', { p_action: 'inspection_change_requested', p_entity: 'inspections', p_entity_id: inspection.id, p_metadata: { actor: { user_id: user.id, profile: actorProfile, timestamp: new Date().toISOString() }, field_changes: fieldChanges, previous_data: previousData, proposed_data: proposedData, request_id: data.id } })
       return NextResponse.json({ data, approvalRequired: true }, { status: 202 })
     }
 
@@ -76,7 +96,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { inspec
         if (itemUpdateError) throw itemUpdateError
       }
     }
-    await supabase.rpc('log_audit', { p_action: 'inspection_updated', p_entity: 'inspections', p_entity_id: inspection.id, p_metadata: { user_id: user.id, user_profile: 'local_user', changed_at: new Date().toISOString(), field_changes: fieldChanges, previous_data: previousData, proposed_data: { ...inspectionData, ...(items ? { items } : {}) } } })
+    await supabase.rpc('log_audit', { p_action: 'inspection_updated', p_entity: 'inspections', p_entity_id: inspection.id, p_metadata: { actor: { user_id: user.id, profile: actorProfile, timestamp: new Date().toISOString() }, field_changes: fieldChanges, previous_data: previousData, proposed_data: { ...inspectionData, ...(items ? { items } : {}) } } })
     return NextResponse.json({ data })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 400 })

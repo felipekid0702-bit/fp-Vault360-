@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title">
+  <title id="title">Símbolo Mate Masie</title>
+  <g fill="none" stroke="#000" stroke-width="15">
+    <circle cx="62" cy="62" r="51"/>
+    <circle cx="178" cy="62" r="51"/>
+    <circle cx="62" cy="178" r="51"/>
+    <circle cx="178" cy="178" r="51"/>
+  </g>
+  <g fill="#000">
+    <circle cx="62" cy="91" r="24"/>
+    <circle cx="178" cy="91" r="24"/>
+    <circle cx="62" cy="207" r="24"/>
+    <circle cx="178" cy="207" r="24"/>
+  </g>
+</svg>

@@ -7,7 +7,6 @@ const FULL_DELETE_ROLE_CODES = new Set([
   'master01',
   'master02',
   'master03',
-  'master04',
 ])
 
 const INSPECTION_APPROVAL_ROLE_CODES = new Set([

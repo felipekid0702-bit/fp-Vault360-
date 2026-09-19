@@ -1,4 +1,5 @@
 import { getDashboardSummary } from '@/modules/bi/service'
+import { MateMasieSignature } from './MateMasieSignature'
 
 export default async function DashboardPage() {
   const summary = await getDashboardSummary()
@@ -30,6 +31,7 @@ export default async function DashboardPage() {
           </div>
         ))}
       </div>
+      <MateMasieSignature />
     </section>
   )
 }

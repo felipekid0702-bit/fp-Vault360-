@@ -28,3 +28,37 @@ textarea,
 select {
   font: inherit;
 }
+
+.mate-masie-symbol,
+.mate-masie-watermark {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 0.08em;
+  color: #000;
+}
+
+.mate-masie-symbol::before,
+.mate-masie-symbol::after,
+.mate-masie-watermark::before,
+.mate-masie-watermark::after {
+  content: '';
+  display: block;
+  border: 0.16em solid currentColor;
+  border-radius: 50%;
+  box-shadow: inset 0.08em 0.08em 0 currentColor;
+}
+
+.mate-masie-watermark {
+  width: 100%;
+  height: 100%;
+  color: #4f8064;
+  gap: 0.06em;
+}
+
+.mate-masie-watermark::before,
+.mate-masie-watermark::after {
+  border-width: 0.1em;
+  box-shadow: inset 0.05em 0.05em 0 currentColor;
+}

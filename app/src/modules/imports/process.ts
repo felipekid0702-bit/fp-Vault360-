@@ -1,4 +1,5 @@
 import { createServerSupabaseClient, createServiceRoleClient } from '@/shared/lib/supabase/server'
+import { getAuthenticatedTenant } from '@/shared/lib/supabase/tenant'
 import { parseSpreadsheet } from './preview'
 
 const EQUIPMENT_STATUSES = new Set(['active', 'quarantine', 'blocked', 'retired', 'lost'])
@@ -20,8 +21,7 @@ function asText(value: unknown) {
 
 export async function processImportJob(jobId: string) {
   const supabase = createServerSupabaseClient()
-  const { data: auth } = await supabase.auth.getUser()
-  if (!auth.user) throw new Error('Sessão expirada')
+  const { user, tenantId } = await getAuthenticatedTenant(supabase)
 
   const { data: job, error: jobError } = await supabase.from('import_jobs').select('*').eq('id', jobId).single()
   if (jobError || !job) throw new Error(jobError?.message ?? 'Importação não encontrada')
@@ -50,18 +50,16 @@ export async function processImportJob(jobId: string) {
       return !parsed.errors.some((error) => error.row_number === rowNumber)
     })
 
-    const { data: profile } = await supabase.from('users').select('tenant_id').eq('id', auth.user.id).single()
-    if (!profile?.tenant_id) throw new Error('Usuário não possui tenant para importar equipamentos')
-    const { data: categories } = await supabase.from('equipment_categories').select('id, name').eq('tenant_id', profile.tenant_id).is('deleted_at', null)
+    const { data: categories } = await supabase.from('equipment_categories').select('id, name').eq('tenant_id', tenantId).is('deleted_at', null)
     const categoryIds = new Map((categories ?? []).map((category) => [category.name.toLocaleLowerCase('pt-BR'), category.id]))
-    const { data: manufacturers } = await supabase.from('manufacturers').select('id, name').eq('tenant_id', profile.tenant_id).is('deleted_at', null)
+    const { data: manufacturers } = await supabase.from('manufacturers').select('id, name').eq('tenant_id', tenantId).is('deleted_at', null)
     const manufacturerIds = new Map((manufacturers ?? []).map((manufacturer) => [manufacturer.name.toLocaleLowerCase('pt-BR'), manufacturer.id]))
 
     for (let index = 0; index < validRows.length; index += 1) {
       const row = validRows[index]
       const status = asText(row.status)
       const payload = {
-        tenant_id: profile.tenant_id,
+        tenant_id: tenantId,
         model: asText(row.model) as string,
         serial_number: asText(row.serial_number),
         internal_code: asText(row.internal_code),
@@ -73,8 +71,8 @@ export async function processImportJob(jobId: string) {
         invoice_number: asText(row.invoice_number),
         status: status && EQUIPMENT_STATUSES.has(status) ? status : 'active',
         notes: asText(row.notes),
-        created_by: auth.user.id,
-        updated_by: auth.user.id,
+        created_by: user.id,
+        updated_by: user.id,
       }
       const { data: equipment, error } = await supabase.from('equipment').insert(payload).select('id').single()
       if (error || !equipment) {

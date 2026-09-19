@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient, createServiceRoleClient } from '@/shared/lib/supabase/server'
+import { getAuthenticatedTenant } from '@/shared/lib/supabase/tenant'
 
 export const runtime = 'nodejs'
 
@@ -12,13 +13,10 @@ export async function POST(request: NextRequest) {
     if (!['xlsx', 'xls', 'csv'].includes(extension ?? '')) return NextResponse.json({ error: 'Formato não suportado' }, { status: 422 })
 
     const supabase = createServerSupabaseClient()
-    const { data: auth } = await supabase.auth.getUser()
-    if (!auth.user) return NextResponse.json({ error: 'Sessão expirada' }, { status: 401 })
-    const { data: profile } = await supabase.from('users').select('tenant_id').eq('id', auth.user.id).single()
-    if (!profile?.tenant_id) return NextResponse.json({ error: 'Usuário sem tenant' }, { status: 403 })
+    const { user, tenantId } = await getAuthenticatedTenant(supabase)
 
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-    const path = `${profile.tenant_id}/imports/${crypto.randomUUID()}-${safeName}`
+    const path = `${tenantId}/imports/${crypto.randomUUID()}-${safeName}`
     const storage = createServiceRoleClient().storage
     const { data: bucket } = await storage.getBucket('documents')
     if (!bucket) {
